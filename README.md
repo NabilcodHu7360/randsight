@@ -148,6 +148,10 @@ That last one is the point of the whole thing: the *item* told you the moveset.
 
 ## Install
 
+> **Publishing:** see [PUBLISH.md](PUBLISH.md) — the repo is ready to push, CI is
+> wired up, and the store listing copy is written out in [docs/LISTING.md](docs/LISTING.md).
+
+
 The extension isn't on the Web Store, so load it unpacked:
 
 1. Unzip this folder somewhere permanent — Chrome reads it from disk every launch.
