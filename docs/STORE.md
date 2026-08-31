@@ -272,13 +272,27 @@ worth more than the bytes.
 
 ---
 
-## The store screenshots need retaking
+## The store screenshots
 
-`docs/store/*.png` were taken when the extension was called Randbats Live, and
-the panel's own title bar is in every one of them. They are now pictures of a
-product that no longer exists under that name.
+`docs/store/*.png` are generated, not hand-taken:
 
-Retake all three from a live game, then:
+```bash
+npm run shots
+```
+
+They used to be ladder screenshots, which is how all three ended up showing a
+title bar that said "Randbats Live" — an asset nothing checks drifts away from
+the product silently. `scripts/shots.js` drives the same harness the UI suite
+uses, at the 1280x800 the store wants, so a rename or a UI change now shows up
+in the shots the next time anyone runs it.
+
+Run it somewhere `play.pokemonshowdown.com` is reachable — the Pokemon icons are
+background-images from there, and without them every card has an empty square
+where the sprite goes. The script checks and refuses rather than writing shots
+with holes in them.
+
+A real ladder screenshot is still the more persuasive asset if you want to swap
+one in. Redact it first — the script OCRs the frame and covers the usernames:
 
 ```bash
 python3 scripts/anonymise-shots.py docs/store shot1.png shot2.png shot3.png

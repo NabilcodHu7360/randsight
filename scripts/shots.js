@@ -22,7 +22,8 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUT = path.join(ROOT, 'docs', 'store');
+const OUT = path.join(ROOT, 'docs', 'store');   // 1280x800 + caption, for the store
+const OUT_SITE = path.join(ROOT, 'docs', 'site'); // panel only, for docs/index.html
 const PORT = 8744;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png' };
 const ALLOW_BLANK = process.argv.includes('--allow-blank-icons');
@@ -116,6 +117,7 @@ function captionHTML(s) {
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
+  fs.mkdirSync(OUT_SITE, { recursive: true });
   await new Promise(r => server.listen(PORT, r));
 
   const browser = await chromium.launch({ ...require('../test/chromium') });
@@ -158,7 +160,22 @@ function captionHTML(s) {
     }, captionHTML(shot));
     await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(OUT, shot.file) });
-    console.log(`  ${shot.file}  ${shot.tab}`);
+
+    // The same frame again without the caption, cropped to the panel, for
+    // docs/index.html — that page writes its own figcaptions, and an image with
+    // the pitch baked in underneath one makes the reader read it twice.
+    const box = await page.evaluate(() => {
+      document.getElementById('rs-cap').style.visibility = 'hidden';
+      const r = document.getElementById('rs-panel').getBoundingClientRect();
+      const m = 26;                              // keep the drop shadow
+      return { x: Math.max(0, r.left - m), y: Math.max(0, r.top - m),
+               width: Math.min(1280, r.width + m * 2),
+               height: Math.min(800, r.height + m * 2) };
+    });
+    await page.screenshot({ path: path.join(OUT_SITE, shot.file), clip: box });
+    await page.evaluate(() => { document.getElementById('rs-cap').style.visibility = ''; });
+
+    console.log(`  ${shot.file}  ${shot.tab}  (store + site)`);
   }
 
   await browser.close();
