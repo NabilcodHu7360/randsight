@@ -56,9 +56,19 @@ they say no, and what to do if nobody replies.
 3. Paste the fields from `docs/LISTING.md`. Every one is written out and inside
    its character limit, including the single-purpose statement and the
    permission justifications reviewers ask for.
-4. Screenshots from `docs/store/`. **Retake `2-damage.png` first** — the current
-   one predates v1.7.0 and shows a stat warning that no longer fires plus the
-   old pairing-button wording. Take a fresh one, then:
+4. Screenshots from `docs/store/`. They are generated, not hand-taken:
+   ```bash
+   npm run shots
+   ```
+   That drives the same harness the UI suite uses, at 1280x800, so the shots
+   always match the code that is shipping — which the old hand-taken ones did
+   not, having survived both v1.7.0 and the rename. **Run it somewhere
+   `play.pokemonshowdown.com` is reachable**, or every card gets a blank icon
+   square; the script refuses rather than writing shots with holes in them.
+
+   A real ladder screenshot is still the more convincing asset if you want to
+   swap one in. Run it through the redactor first — it OCRs the frame and
+   covers the usernames:
    ```bash
    python3 scripts/anonymise-shots.py docs/store new-shot.png
    ```
