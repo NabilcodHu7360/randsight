@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Randbats Live — reading the panel</title>
+
+<style>
+/* ---------------------------------------------------------------------------
+   Tokens. Light is the bare :root so the un-stamped "system" state resolves;
+   dark is redefined twice — once for the OS preference, once for an explicit
+   toggle — and every component reads through the tokens, never a literal.
+   --------------------------------------------------------------------------- */
+:root {
+  --ground:    #f5f7fa;
+  --surface:   #ffffff;
+  --sunken:    #eceff4;
+  --hair:      #dde2ea;
+  --edge:      #b3bcc9;
+  --ink:       #14181e;
+  --dim:       #4a5462;
+  --faint:     #6d7787;
+  --signal:    #1d47c9;
+  --confirmed: #0a5c28;
+  --threat:    #a81919;
+  --shadow:    0 1px 2px rgba(18, 24, 34, .06), 0 8px 28px rgba(18, 24, 34, .07);
+
+  /* System stacks only: this page ships inside the extension and loads nothing
+     from the network at all — its images are local files and its script is
+     local. A webfont would be this page's first request, so there isn't one.
+     (The panel itself does make requests; see PRIVACY.md.) */
+  --display: 'Archivo', 'Helvetica Neue', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:    #0f1218;
+    --surface:   #171b23;
+    --sunken:    #1e232c;
+    --hair:      #2a303b;
+    --edge:      #4d5665;
+    --ink:       #eef1f6;
+    --dim:       #a3adbd;
+    --faint:     #8892a1;
+    --signal:    #7fb2ff;
+    --confirmed: #5fdd93;
+    --threat:    #ff9d9d;
+    --shadow:    0 1px 2px rgba(0, 0, 0, .4), 0 10px 34px rgba(0, 0, 0, .45);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:    #0f1218;
+  --surface:   #171b23;
+  --sunken:    #1e232c;
+  --hair:      #2a303b;
+  --edge:      #4d5665;
+  --ink:       #eef1f6;
+  --dim:       #a3adbd;
+  --faint:     #8892a1;
+  --signal:    #7fb2ff;
+  --confirmed: #5fdd93;
+  --threat:    #ff9d9d;
+  --shadow:    0 1px 2px rgba(0, 0, 0, .4), 0 10px 34px rgba(0, 0, 0, .45);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 28px 96px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 56px;
+}
+@media (min-width: 1000px) {
+  .wrap { grid-template-columns: 186px minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------- masthead ----- */
+
+.masthead {
+  grid-column: 1 / -1;
+  padding: 72px 0 40px;
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 48px;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(38px, 6.4vw, 66px);
+  line-height: 1.02;
+  letter-spacing: -.032em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+  max-width: 15ch;
+}
+.standfirst {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--dim);
+  margin: 0;
+  max-width: 54ch;
+}
+.standfirst strong { color: var(--ink); font-weight: 600; }
+
+/* --------------------------------------------------- the live specimen --- */
+/* One real panel row. It is the most characteristic object in this product's
+   world, so the page opens with it rather than with a picture of it. */
+
+.specimen {
+  margin: 44px 0 0;
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 16px 16px 14px;
+  box-shadow: var(--shadow);
+}
+.specimen-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 9px;
+}
+.prow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 14.5px;
+  margin-bottom: 3px;
+}
+.prow i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--signal) 20%, transparent);
+  border-radius: 4px;
+  width: 0;
+}
+.prow.anim i { transition: width 1.05s cubic-bezier(.22, .9, .3, 1); }
+.prow span { position: relative; }
+.prow .pct {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--signal);
+}
+.prow.seen i { background: color-mix(in srgb, var(--confirmed) 20%, transparent); }
+.prow.seen .nm { color: var(--confirmed); font-weight: 600; }
+.prow.seen .pct { color: var(--confirmed); }
+.specimen-note {
+  font-size: 13.5px;
+  color: var(--dim);
+  margin: 12px 2px 0;
+  line-height: 1.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .prow.anim i { transition: none; }
+}
+
+/* --------------------------------------------------------------- rail ---- */
+
+.rail { display: none; }
+@media (min-width: 1000px) {
+  .rail {
+    display: block;
+    grid-column: 1;
+    position: sticky;
+    top: 40px;
+    align-self: start;
+    padding-top: 4px;
+  }
+}
+.rail-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 14px;
+}
+.rail ol { list-style: none; margin: 0 0 22px; padding: 0; }
+.rail li { margin-bottom: 2px; }
+.rail a {
+  display: flex;
+  gap: 10px;
+  padding: 5px 0;
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 2px solid transparent;
+  padding-left: 11px;
+  transition: color .12s, border-color .12s;
+}
+.rail a:hover, .rail a:focus-visible { color: var(--ink); border-left-color: var(--edge); }
+.rail a .n {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--faint);
+  padding-top: 2px;
+}
+.rail .plain { border-left: 0; padding-left: 13px; }
+
+/* -------------------------------------------------------------- flow ----- */
+
+main { grid-column: 1 / -1; min-width: 0; }
+@media (min-width: 1000px) { main { grid-column: 2; } }
+
+section { margin-bottom: 68px; scroll-margin-top: 28px; }
+
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 27px;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+h2 .n {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--signal);
+  margin-right: 12px;
+  letter-spacing: 0;
+}
+.sub {
+  color: var(--dim);
+  font-size: 15px;
+  margin: 0 0 26px;
+  max-width: 62ch;
+}
+h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -.008em;
+  margin: 34px 0 10px;
+}
+p { margin: 0 0 16px; max-width: 66ch; }
+main a { color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+kbd, code, .tok {
+  font-family: var(--mono);
+  font-size: .88em;
+  font-weight: 500;
+  background: var(--sunken);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.tok.ok { color: var(--confirmed); }
+.tok.no { color: var(--threat); }
+
+/* ---------------------------------------------------------- setup list --- */
+
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+.steps li {
+  counter-increment: s;
+  position: relative;
+  padding: 0 0 16px 42px;
+  border-left: 1px solid var(--hair);
+  margin-left: 11px;
+}
+.steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.steps li::before {
+  content: counter(s);
+  position: absolute;
+  left: -11px;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dim);
+}
+.steps strong { font-weight: 600; }
+.steps .hint { display: block; color: var(--dim); font-size: 14px; margin-top: 1px; }
+
+/* ------------------------------------------------------------- figure ---- */
+
+figure {
+  margin: 26px 0 30px;
+  max-width: 700px;
+}
+figure img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  background: #12151b;
+}
+figcaption {
+  font-size: 13.5px;
+  color: var(--dim);
+  margin-top: 12px;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+/* ------------------------------------------------------------ callouts --- */
+
+.note {
+  border-left: 2px solid var(--signal);
+  background: var(--sunken);
+  padding: 13px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 22px 0;
+  font-size: 15px;
+  max-width: 64ch;
+}
+.note p { margin: 0; }
+.note p + p { margin-top: 9px; }
+
+/* -------------------------------------------------------------- table ---- */
+
+.defs { border-top: 1px solid var(--hair); margin: 22px 0 0; }
+.def {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 4px 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--hair);
+  align-items: baseline;
+}
+@media (max-width: 620px) { .def { grid-template-columns: 1fr; gap: 6px; } }
+.def dt {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.def dd { margin: 0; font-size: 15px; color: var(--dim); }
+.def dd b { color: var(--ink); font-weight: 500; }
+
+/* The bar beside each KO term is proportional to the damage it describes —
+   real data, not ornament. */
+.gauge {
+  grid-column: 2;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--sunken);
+  overflow: hidden;
+  margin-top: 6px;
+  max-width: 260px;
+}
+@media (max-width: 620px) { .gauge { grid-column: 1; } }
+.gauge i { display: block; height: 100%; background: var(--threat); border-radius: 2px; }
+
+/* ------------------------------------------------------------- signals --- */
+
+.signals { display: grid; gap: 14px; margin: 24px 0 0; }
+.signal {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 16px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  align-items: baseline;
+}
+.signal .lbl {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--signal);
+  white-space: nowrap;
+}
+.signal .txt { font-size: 15px; color: var(--dim); }
+.signal .txt b { color: var(--ink); font-weight: 500; }
+@media (max-width: 620px) { .signal { grid-template-columns: 1fr; } }
+
+/* --------------------------------------------------------------- misc ---- */
+
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  padding: 2px 9px;
+  margin-bottom: 14px;
+}
+footer {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--hair);
+  padding-top: 24px;
+  color: var(--faint);
+  font-size: 13.5px;
+  max-width: 66ch;
+}
+footer a { color: var(--dim); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 3px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Randbats Live · start here</p>
+    <h1>Reading the panel</h1>
+    <p class="standfirst">The overlay is doing one thing: keeping a running estimate of what the
+      other six Pokémon are holding, and updating it every time the battle gives something away.
+      <strong>Five minutes here and you'll never have to think about it again.</strong></p>
+
+    <div class="specimen" id="specimen">
+      <div class="specimen-head"><span>Moves</span><span>1 unknown</span></div>
+      <div class="prow anim" data-w="100"><i></i><span class="nm">Close Combat</span><span class="pct">100%</span></div>
+      <div class="prow anim" id="reveal" data-w="29"><i></i><span class="nm">Ice Spinner</span><span class="pct">29%</span></div>
+      <div class="prow anim" data-w="24"><i></i><span class="nm">Knock Off</span><span class="pct">24%</span></div>
+      <p class="specimen-note">Watch the second row. That's what a reveal looks like — one move
+        confirmed, and every other candidate re-weighted around it.</p>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Contents">
+    <p class="rail-title">Per turn</p>
+    <ol>
+      <li><a href="#sets"><span class="n">01</span><span>Sets</span></a></li>
+      <li><a href="#damage"><span class="n">02</span><span>Damage</span></a></li>
+      <li><a href="#switch"><span class="n">03</span><span>Switch</span></a></li>
+    </ol>
+    <p class="rail-title">Reference</p>
+    <ol>
+      <li><a class="plain" href="#ko">KO glossary</a></li>
+      <li><a class="plain" href="#signals">Three signals</a></li>
+      <li><a class="plain" href="#setup">Install</a></li>
+      <li><a class="plain" href="#trouble">If it's blank</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="sets">
+      <h2><span class="n">01</span>Sets — what are they running?</h2>
+      <p class="sub">The default tab. One card per opposing Pokémon, sorted with the active one
+        first and the fainted ones last.</p>
+
+      <p>The bars are moves, and the number beside each is the chance that move is in one of the
+        slots you haven't seen yet. <span class="tok ok">seen</span> means they've already used
+        it. The header says how many slots are still open — <span class="tok">3 unknown</span>,
+        or <span class="tok">set is fixed</span> when there's only one possible set left.</p>
+
+      <p>Everything that has stopped being a question shrinks. A settled item, ability or role
+        drops out of its own block and becomes one grey word on the line at the bottom of the
+        card. Anything still genuinely in doubt stays as a compact row —
+        <span class="tok">ITEM&nbsp; Assault Vest 76% · Leftovers 24%</span>. So what's taking up
+        space on screen is, deliberately, only what's still undecided.</p>
+
+      <figure>
+        <img src="sets.webp" alt="Three opposing Pokémon cards: Gholdengo locked into Make It Rain, Dragapult with Hex struck through and marked no PP, Great Tusk with four candidate moves and an uncertain item.">
+        <figcaption>Gholdengo is locked into one move. Dragapult's Hex is struck through — the PP
+          is gone. Great Tusk still has four live candidates for its last slot, so those keep
+          their bars.</figcaption>
+      </figure>
+
+      <p>Hover anything for what it actually does, pulled from Showdown's own dex — moves also
+        show type, base power, accuracy and priority. Click a card header to fold it away.</p>
+    </section>
+
+    <section id="damage">
+      <h2><span class="n">02</span>Damage — what happens if we both attack?</h2>
+      <p class="sub">The current matchup, both directions.</p>
+
+      <p>Read the two verdict lines and you can stop there. They say in words what the table
+        says in numbers:</p>
+
+      <div class="note">
+        <p><b>You survive</b> — worst is Headlong Rush at 64%, about 2 hits.</p>
+        <p><b>Moonblast KOs them.</b></p>
+      </div>
+
+      <p>Above them sits the speed line: who moves first, with boosts, paralysis, Tailwind and
+        Trick Room already folded in. If it says <em>"You move first — unless Choice Scarf"</em>,
+        that is exactly what it means, and the number it would become is right there.</p>
+
+      <figure>
+        <img src="damage.webp" alt="The Damage tab: a speed verdict, then incoming moves ranked by threat with damage ranges and how likely each is, then outgoing moves with KO summaries.">
+        <figcaption>Incoming moves are ranked by <em>threat</em> — damage discounted by how likely
+          they actually have it — not by raw damage. A 40%-likely OHKO is a bigger problem than a
+          certain 20% chip.</figcaption>
+      </figure>
+
+      <p>Two marks worth knowing. <span class="tok">±</span> means their item or ability choice
+        genuinely moves that number, so treat it as a range rather than a figure.
+        <span class="tok">immune</span> rows are shown on purpose rather than hidden — a move that
+        can't touch you is the single most useful thing to be told.</p>
+
+      <p>In doubles there are up to four pairings and you pick which one you're looking at. The
+        buttons across the top are every matchup actually on the field.</p>
+    </section>
+
+    <section id="switch">
+      <h2><span class="n">03</span>Switch — should I get out?</h2>
+      <p class="sub">Your six, ranked against the worst hit they can realistically land.</p>
+
+      <p>It leads with the answer: <em>"Safest switch: Blissey — takes about 32%, leaving
+        68%."</em> Safest means <strong>HP left standing</strong>, not the smallest damage figure.
+        A wall already chipped to 55% that takes 25% is in more trouble than a healthy one that
+        takes 32%, so chipped slots show their current HP inline and sort accordingly.</p>
+
+      <figure>
+        <img src="switch.webp" alt="The Switch tab: each team member with the worst hit they would take and a survives column reading yes or KO.">
+        <figcaption>▲ means that slot outspeeds their active once it's in; ▼ means it doesn't.
+          Hover a row to see which move does the damage and how likely they have it.</figcaption>
+      </figure>
+
+      <p>If nothing on your bench lives through their best hit, the tab says so rather than
+        recommending a Pokémon that dies. In doubles it ranks against <em>both</em> of their
+        actives, because being safe from one of them isn't being safe.</p>
+    </section>
+
+    <section id="ko">
+      <span class="pill">Glossary</span>
+      <h2>KO, and the numbers in front of it</h2>
+      <p class="sub">KO is short for <em>knock out</em> — the Pokémon faints. The number tells you
+        how many hits it takes.</p>
+
+      <dl class="defs">
+        <div class="def">
+          <dt>OHKO</dt>
+          <dd><b>One-hit KO.</b> That single move kills. The one you most need to see before you
+            decide anything else.</dd>
+          <div class="gauge"><i style="width:100%"></i></div>
+        </div>
+        <div class="def">
+          <dt>2HKO</dt>
+          <dd><b>Two hits.</b> You get one turn — to attack, heal, or leave.</dd>
+          <div class="gauge"><i style="width:52%"></i></div>
+        </div>
+        <div class="def">
+          <dt>3HKO</dt>
+          <dd><b>Three hits.</b> Comfortable, unless something else is chipping you.</dd>
+          <div class="gauge"><i style="width:34%"></i></div>
+        </div>
+        <div class="def">
+          <dt>8HKO</dt>
+          <dd><b>Eight hits.</b> In practice, that move isn't the thing that beats you.</dd>
+          <div class="gauge"><i style="width:13%"></i></div>
+        </div>
+      </dl>
+
+      <h3>Guaranteed vs possible</h3>
+      <p>Damage in Pokémon rolls across a ±15% spread, so the same move doesn't always do the
+        same thing. <span class="tok">guaranteed 2HKO</span> means every roll gets there.
+        <span class="tok">possible 2HKO</span> means only the high rolls do — you're being told
+        it's a gamble, not a plan.</p>
+
+      <h3>KO on its own, in the Switch tab</h3>
+      <p>The <span class="tok">survives?</span> column reads <span class="tok ok">yes</span> or
+        <span class="tok no">KO</span>. It's measured against that Pokémon's <em>current</em> HP,
+        not its full bar — which is why a chipped Ting-Lu taking 68% reads
+        <span class="tok no">KO</span> while a healthy teammate taking 64% reads
+        <span class="tok ok">yes</span>.</p>
+    </section>
+
+    <section id="signals">
+      <h2>Three things the panel tells you that nothing else does</h2>
+      <p class="sub">These come from watching the battle, not from set data, and they're easy to
+        miss the first few games.</p>
+
+      <div class="signals">
+        <div class="signal">
+          <span class="lbl">no Tera left</span>
+          <span class="txt">Their side has <b>already Terastallized</b>, and it's once per battle.
+            Every other Pokémon on that team now has a Tera type it will never use, so the panel
+            stops showing it.</span>
+        </div>
+        <div class="signal">
+          <span class="lbl">Locked into…</span>
+          <span class="txt">They've committed to a move and can't pick another until they switch.
+            If the item isn't confirmed yet you'll see the odds —
+            <b>"Locked into Make It Rain if Choice (78%)"</b>.</span>
+        </div>
+        <div class="signal">
+          <span class="lbl">no PP</span>
+          <span class="txt">That move is <b>spent</b>. It's struck through and dropped from the
+            threat ranking, because it cannot happen again no matter what the percentages say.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup">
+      <h2>Install and setup</h2>
+      <p class="sub">Loading it unpacked, and the two habits worth having.</p>
+
+      <ol class="steps">
+        <li><strong>Unzip somewhere permanent.</strong>
+          <span class="hint">Chrome reads the folder off disk every launch — if you move or
+            delete it, the extension stops working.</span></li>
+        <li><strong>Open <code>chrome://extensions</code></strong>
+          <span class="hint">Works the same in Edge, Brave and other Chromium browsers.</span></li>
+        <li><strong>Turn on Developer mode</strong>, top right.</li>
+        <li><strong>Load unpacked</strong>, and pick the folder with <code>manifest.json</code>
+          in it. <span class="hint">Pick the folder itself, not the zip and not a folder
+            containing it.</span></li>
+        <li><strong>Start a Random Battle.</strong>
+          <span class="hint">The panel appears by itself. Nothing to switch on.</span></li>
+      </ol>
+
+      <div class="note">
+        <p>Drag the panel by its title bar, resize from the bottom-right corner, and use
+          <span class="tok">◐</span> for light mode. Position, size, theme and which cards you
+          left open all persist between battles.</p>
+      </div>
+
+      <p>The toolbar button hides the panel, switches it between watching the opponent and
+        watching your own side, and force-refreshes the set data.</p>
+
+      <h3>After you replace the files with a new version</h3>
+      <p>Chrome keeps running the old copy until you tell it not to. Go to
+        <code>chrome://extensions</code> and press the <span class="tok">↻</span> button on the
+        card. Nearly every "the update didn't do anything" is this.</p>
+    </section>
+
+    <section id="trouble">
+      <h2>If the panel looks empty</h2>
+      <p class="sub">It always says why. The message is the diagnosis.</p>
+
+      <dl class="defs">
+        <div class="def">
+          <dt>No battle</dt>
+          <dd>You're on the Showdown home page or a chat room. Open or spectate a battle.</dd>
+        </div>
+        <div class="def">
+          <dt>Not random</dt>
+          <dd>The format has no published randbats data — OU, Ubers, Hackmons Cup and so on. The
+            panel only speaks Random Battle.</dd>
+        </div>
+        <div class="def">
+          <dt>approx&nbsp;sets</dt>
+          <dd>Multi and Free-For-All borrow the closest format's data. Still useful, just not
+            exact, and the footer says so.</dd>
+        </div>
+        <div class="def">
+          <dt>Loading</dt>
+          <dd>Fetching set data on first run. It's cached for six hours after that.</dd>
+        </div>
+      </dl>
+
+      <p style="margin-top:24px">The footer of the panel always names the data file it's using and
+        how old that data is, so you can tell at a glance whether you're looking at the right
+        format.</p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Randbats Live watches the battle and never plays it: it cannot make a move, send a
+      message, or change what happens. It collects nothing, and there is no server behind it —
+      no battle log, chat message, username or result is transmitted anywhere. It does make
+      two kinds of request: the public set-data files from
+      <a href="https://github.com/pkmn/randbats">pkmn/randbats</a>, one per format you play,
+      and Pokémon sprite images from Showdown's own sprite server when the client's icon
+      function isn't available. The sprite request names a Pokémon in your battle, and goes to
+      the site you're already playing on. The full account — including what is kept on your
+      own machine, and the two browser globals the bridge replaces — is in
+      <a href="../PRIVACY.md">PRIVACY.md</a>, which ships inside the extension.</p>
+    <p>Damage numbers come from
+      <a href="https://github.com/smogon/damage-calc">@smogon/calc</a>; the set tables are
+      generated with <a href="https://github.com/smogon/pokemon-showdown">Pokémon Showdown</a>'s
+      own team generator. Both are MIT; their notices are in
+      <a href="../THIRD-PARTY-LICENSES.txt">THIRD-PARTY-LICENSES.txt</a>. Randbats Live is by
+      Mohammad Nabil Islam and is itself MIT licensed. Not affiliated with Smogon,
+      Pokémon Showdown, or Nintendo/Game Freak.</p>
+  </footer>
+</div>
+
+<script src="guide.js"></script>
+</body>
+</html>

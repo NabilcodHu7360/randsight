@@ -1,0 +1,30 @@
+{
+  "name": "randbats-live",
+  "version": "1.7.0",
+  "description": "Chrome extension: live Bayesian set prediction for Pokemon Showdown Random Battles.",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:engine && npm run test:ui && npm run test:doubles && npm run test:damage && npm run test:a11y && npm run test:protocol && npm run test:regress && npm run test:load && npm run test:joint && npm run test:rivals",
+    "test:engine": "node test/engine.test.js",
+    "test:ui": "node test/ui.test.js",
+    "test:a11y": "node test/a11y.test.js",
+    "test:doubles": "node test/doubles.test.js",
+    "test:damage": "node test/damage.test.js",
+    "test:load": "node test/load.test.js",
+    "test:protocol": "node test/protocol.test.js",
+    "test:regress": "node test/regress.test.js",
+    "package": "bash scripts/package.sh",
+    "test:calibration": "node test/calibration.test.js",
+    "fetch-fixtures": "node scripts/fetch-fixtures.js",
+    "build-vendor": "bash scripts/build-vendor.sh",
+    "test:joint": "node test/joint.test.js",
+    "test:rivals": "node test/rivals.test.js",
+    "build-joint": "node scripts/build-joint.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0",
+    "pokemon-showdown": "^0.11.11"
+  },
+  "author": "Mohammad Nabil Islam",
+  "license": "MIT"
+}

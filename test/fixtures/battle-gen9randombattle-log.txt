@@ -1,0 +1,387 @@
+# Gen 9 Random Battle — full match, exactly as the client receives it off the socket.
+#
+# Every line shape in here was verified against the real simulator shipped in
+# node_modules/pokemon-showdown (see the `[from] ` spacing, the `move: `/`ability: `
+# effect prefixes, the `NN/100` foe HP under HP Percentage Mod, and the nickname/
+# species split on forme'd Pokemon such as Rotom-Wash -> "Rotom").
+#
+# Frames are separated by the `>roomid` line, the way Showdown actually chunks them.
+# Lines starting with `#` are fixture comments and are stripped before feeding.
+#
+# Three deliberate departures from a stock ladder game, all required to exercise
+# parser branches that are otherwise never reached:
+#   * a team-preview block (`|clearpoke|`/`|poke|`/`|teampreview`) — Gen 9 Random
+#     Battle does not send one, but `inject.js` has a `poke` case to cover.
+#   * nicknames on two foe Pokemon ("Éclair♪", "Big Nap:Zzz") — randbats never
+#     nicknames, but the parser keys everything off the nickname so it must hold up.
+#     Showdown strips `|` from nicknames (it is the protocol delimiter), so the
+#     awkward characters here are the ones that can genuinely occur.
+#   * the Choice Specs knocked off Rotom-Wash on turn 28. Nothing else in the log
+#     removes a Choice item, and the choice-lock counter has to be seen resetting
+#     mid-stint rather than only on a switch. Rotom's own earlier turns (Will-O-Wisp
+#     then Hydro Pump, turns 11-12) are not consistent with having held it all game;
+#     the line is here for the `|-enditem|` branch, not for the set.
+#
+# p1 AlphaTester    Skarmory L80 / Weavile L79 / Rotom-Wash L82 /
+#                   Dragonite L74 / Great Tusk L77 / Corviknight L80
+# p2 RandomLadderer Furret L94 "Éclair♪" / Snorlax L82 "Big Nap:Zzz" / Gyarados L79 /
+#                   Palafin L77 / Oricorio-Pom-Pom L82 "Oricorio" / Zoroark-Hisui L80 "Zoroark"
+|updateuser| AlphaTester|1|265|{"blockChallenges":false,"blockPMs":false,"ignoreTickets":false}
+>battle-gen9randombattle-2312345678
+|init|battle
+|title|AlphaTester vs. RandomLadderer
+|j|☆AlphaTester
+|j|☆RandomLadderer
+>battle-gen9randombattle-2312345678
+|player|p1|AlphaTester|265|1583
+|player|p2|RandomLadderer|170|1601
+|teamsize|p1|6
+|teamsize|p2|6
+|gametype|singles
+|gen|9
+|tier|[Gen 9] Random Battle
+|rated
+|rule|HP Percentage Mod: HP is shown in percentages
+|rule|Sleep Clause Mod: Limit one foe put to sleep
+|rule|Species Clause: Limit one of each Pokémon
+|clearpoke
+|poke|p1|Skarmory, L80, M|
+|poke|p1|Weavile, L79, F|
+|poke|p1|Rotom-Wash, L82|
+|poke|p1|Dragonite, L74, M|
+|poke|p1|Great Tusk, L77|
+|poke|p1|Corviknight, L80, M|
+|poke|p2|Furret, L94, F|
+|poke|p2|Snorlax, L82, M|
+|poke|p2|Gyarados, L79, M|
+|poke|p2|Palafin, L77, M|
+|poke|p2|Oricorio-Pom-Pom, L82, F|
+|poke|p2|Zoroark-Hisui, L80, F|
+|teampreview
+|
+|start
+|switch|p1a: Skarmory|Skarmory, L80, M|235/235
+|switch|p2a: Éclair♪|Furret, L94, F|100/100
+|-item|p1a: Skarmory|Rocky Helmet|[from] ability: Frisk|[of] p2a: Éclair♪
+|turn|1
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Éclair♪|Trick|p1a: Skarmory
+|-activate|p2a: Éclair♪|move: Trick|[of] p1a: Skarmory
+|-item|p1a: Skarmory|Life Orb|[from] move: Trick
+|-item|p2a: Éclair♪|Rocky Helmet|[from] move: Trick
+|move|p1a: Skarmory|Roost|p1a: Skarmory
+|-fail|p1a: Skarmory|heal
+|
+|upkeep
+|turn|2
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Éclair♪|Knock Off|p1a: Skarmory
+|-damage|p1a: Skarmory|198/235
+|-enditem|p1a: Skarmory|Life Orb|[from] move: Knock Off|[of] p2a: Éclair♪
+|move|p1a: Skarmory|Brave Bird|p2a: Éclair♪
+|-damage|p2a: Éclair♪|54/100
+|-damage|p1a: Skarmory|175/235|[from] Recoil
+|-damage|p1a: Skarmory|161/235|[from] item: Rocky Helmet|[of] p2a: Éclair♪
+|
+|upkeep
+|turn|3
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Éclair♪|U-turn|p1a: Skarmory
+|-damage|p1a: Skarmory|142/235
+|
+|switch|p2a: Gyarados|Gyarados, L79, M|100/100
+|-ability|p2a: Gyarados|Intimidate|boost
+|-unboost|p1a: Skarmory|atk|1
+|move|p1a: Skarmory|Roost|p1a: Skarmory
+|-heal|p1a: Skarmory|235/235
+|
+|upkeep
+|turn|4
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Gyarados|Dragon Dance|p2a: Gyarados
+|-boost|p2a: Gyarados|atk|1
+|-boost|p2a: Gyarados|spe|1
+|move|p1a: Skarmory|Whirlwind|p2a: Gyarados
+|drag|p2a: Oricorio|Oricorio-Pom-Pom, L82, F|100/100
+|
+|upkeep
+|turn|5
+>battle-gen9randombattle-2312345678
+|
+|switch|p1a: Weavile|Weavile, L79, F|240/240
+|move|p2a: Oricorio|Hurricane|p1a: Weavile
+|-miss|p2a: Oricorio|p1a: Weavile
+|
+|upkeep
+|turn|6
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Weavile|Swords Dance|p1a: Weavile
+|-boost|p1a: Weavile|atk|2
+|-activate|p2a: Oricorio|ability: Dancer
+|move|p2a: Oricorio|Swords Dance|p2a: Oricorio|[from] ability: Dancer
+|-boost|p2a: Oricorio|atk|2
+|move|p2a: Oricorio|Roost|p2a: Oricorio
+|-fail|p2a: Oricorio|heal
+|
+|upkeep
+|turn|7
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Weavile|Knock Off|p2a: Oricorio
+|-damage|p2a: Oricorio|29/100
+|-enditem|p2a: Oricorio|Heavy-Duty Boots|[from] move: Knock Off|[of] p1a: Weavile
+|move|p2a: Oricorio|Revelation Dance|p1a: Weavile
+|-damage|p1a: Weavile|151/240
+|
+|upkeep
+|turn|8
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Weavile|Ice Shard|p2a: Oricorio
+|-supereffective|p2a: Oricorio
+|-damage|p2a: Oricorio|0 fnt
+|faint|p2a: Oricorio
+|
+|upkeep
+|
+|switch|p2a: Big Nap:Zzz|Snorlax, L82, M|100/100
+|turn|9
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Weavile|Triple Axel|p2a: Big Nap:Zzz
+|-damage|p2a: Big Nap:Zzz|93/100
+|-damage|p2a: Big Nap:Zzz|82/100
+|-damage|p2a: Big Nap:Zzz|66/100
+|-hitcount|p2a: Big Nap:Zzz|3
+|move|p2a: Big Nap:Zzz|Body Slam|p1a: Weavile
+|-damage|p1a: Weavile|38/240
+|-status|p1a: Weavile|par
+|
+|upkeep
+|turn|10
+>battle-gen9randombattle-2312345678
+|
+|switch|p1a: Rotom|Rotom-Wash, L82|216/216
+|move|p2a: Big Nap:Zzz|Body Slam|p1a: Rotom
+|-damage|p1a: Rotom|171/216
+|
+|upkeep
+|turn|11
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Rotom|Will-O-Wisp|p2a: Big Nap:Zzz
+|-status|p2a: Big Nap:Zzz|brn
+|move|p2a: Big Nap:Zzz|Rest|p2a: Big Nap:Zzz
+|-status|p2a: Big Nap:Zzz|slp|[from] move: Rest
+|-heal|p2a: Big Nap:Zzz|100/100 slp|[silent]
+|-enditem|p2a: Big Nap:Zzz|Chesto Berry|[eat]
+|-curestatus|p2a: Big Nap:Zzz|slp|[msg]
+|
+|upkeep
+|turn|12
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Rotom|Hydro Pump|p2a: Big Nap:Zzz
+|-damage|p2a: Big Nap:Zzz|71/100
+|move|p2a: Big Nap:Zzz|Body Slam|p1a: Rotom
+|-damage|p1a: Rotom|126/216
+|
+|upkeep
+|turn|13
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Rotom|Hydro Pump|p2a: Big Nap:Zzz
+|-damage|p2a: Big Nap:Zzz|42/100
+|move|p2a: Big Nap:Zzz|Rest|p2a: Big Nap:Zzz
+|-status|p2a: Big Nap:Zzz|slp|[from] move: Rest
+|-heal|p2a: Big Nap:Zzz|100/100 slp|[silent]
+|
+|upkeep
+|turn|14
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Rotom|Hydro Pump|p2a: Big Nap:Zzz
+|-damage|p2a: Big Nap:Zzz|70/100 slp
+|cant|p2a: Big Nap:Zzz|slp
+|move|p2a: Big Nap:Zzz|Sleep Talk|p2a: Big Nap:Zzz
+|move|p2a: Big Nap:Zzz|Curse|p2a: Big Nap:Zzz|[from] move: Sleep Talk
+|-unboost|p2a: Big Nap:Zzz|spe|1
+|-boost|p2a: Big Nap:Zzz|atk|1
+|-boost|p2a: Big Nap:Zzz|def|1
+|
+|upkeep
+|turn|15
+>battle-gen9randombattle-2312345678
+|
+|switch|p1a: Dragonite|Dragonite, L74, M|256/256
+|cant|p2a: Big Nap:Zzz|slp
+|move|p2a: Big Nap:Zzz|Sleep Talk|p2a: Big Nap:Zzz
+|move|p2a: Big Nap:Zzz|Body Slam|p1a: Dragonite|[from] move: Sleep Talk
+|-damage|p1a: Dragonite|218/256
+|
+|upkeep
+|turn|16
+>battle-gen9randombattle-2312345678
+|
+|-terastallize|p1a: Dragonite|Normal
+|move|p1a: Dragonite|Outrage|p2a: Big Nap:Zzz
+|-damage|p2a: Big Nap:Zzz|31/100 slp
+|cant|p2a: Big Nap:Zzz|slp
+|move|p2a: Big Nap:Zzz|Sleep Talk|p2a: Big Nap:Zzz
+|move|p2a: Big Nap:Zzz|Curse|p2a: Big Nap:Zzz|[from] move: Sleep Talk
+|-unboost|p2a: Big Nap:Zzz|spe|1
+|-boost|p2a: Big Nap:Zzz|atk|1
+|-boost|p2a: Big Nap:Zzz|def|1
+|
+|upkeep
+|turn|17
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Dragonite|Outrage|p2a: Big Nap:Zzz|[from] lockedmove
+|-damage|p2a: Big Nap:Zzz|0 fnt
+|faint|p2a: Big Nap:Zzz
+|
+|upkeep
+|
+|switch|p2a: Palafin|Palafin, L77, M|100/100
+|turn|18
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Palafin|Flip Turn|p1a: Dragonite
+|-damage|p1a: Dragonite|191/256
+|detailschange|p2a: Palafin|Palafin-Hero, L77, M
+|
+|switch|p2a: Gyarados|Gyarados, L79, M|100/100
+|-ability|p2a: Gyarados|Intimidate|boost
+|-unboost|p1a: Dragonite|atk|1
+|move|p1a: Dragonite|Outrage|p2a: Gyarados|[from] lockedmove
+|-damage|p2a: Gyarados|48/100
+|-start|p1a: Dragonite|confusion|[fatigue]
+|
+|upkeep
+|turn|19
+>battle-gen9randombattle-2312345678
+|
+|-terastallize|p2a: Gyarados|Water
+|move|p2a: Gyarados|Waterfall|p1a: Dragonite
+|-damage|p1a: Dragonite|84/256
+|-activate|p1a: Dragonite|confusion
+|-damage|p1a: Dragonite|55/256|[from] confusion
+|
+|upkeep
+|turn|20
+>battle-gen9randombattle-2312345678
+|
+|switch|p1a: Great Tusk|Great Tusk, L77|304/304
+|-enditem|p1a: Great Tusk|Booster Energy
+|-activate|p1a: Great Tusk|ability: Protosynthesis|[fromitem]
+|-start|p1a: Great Tusk|protosynthesisatk
+|move|p2a: Gyarados|Earthquake|p1a: Great Tusk
+|-damage|p1a: Great Tusk|233/304
+|
+|upkeep
+|turn|21
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Great Tusk|Headlong Rush|p2a: Gyarados
+|-damage|p2a: Gyarados|0 fnt
+|-unboost|p1a: Great Tusk|def|1
+|-unboost|p1a: Great Tusk|spd|1
+|faint|p2a: Gyarados
+|
+|upkeep
+|
+|switch|p2a: Palafin|Palafin-Hero, L80, M|100/100
+|turn|22
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Palafin|Bitter Malice|p1a: Great Tusk
+|-damage|p1a: Great Tusk|118/304
+|-unboost|p1a: Great Tusk|atk|1
+|move|p1a: Great Tusk|Close Combat|p2a: Palafin
+|-damage|p2a: Palafin|34/100
+|-unboost|p1a: Great Tusk|def|1
+|-unboost|p1a: Great Tusk|spd|1
+|replace|p2a: Zoroark|Zoroark-Hisui, L80, F
+|-end|p2a: Zoroark|Illusion
+|
+|upkeep
+|turn|23
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Zoroark|Bitter Malice|p1a: Great Tusk
+|-damage|p1a: Great Tusk|0 fnt
+|faint|p1a: Great Tusk
+|
+|upkeep
+|
+|switch|p1a: Corviknight|Corviknight, L80, M|271/271
+|-ability|p1a: Corviknight|Pressure
+|turn|24
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Zoroark|Bitter Malice|p1a: Corviknight
+|-damage|p1a: Corviknight|196/271
+|move|p1a: Corviknight|Brave Bird|p2a: Zoroark
+|-damage|p2a: Zoroark|0 fnt
+|-damage|p1a: Corviknight|172/271|[from] Recoil
+|faint|p2a: Zoroark
+|
+|-heal|p1a: Corviknight|189/271|[from] item: Leftovers
+|upkeep
+|
+|switch|p2a: Palafin|Palafin-Hero, L77, M|100/100
+|turn|25
+>battle-gen9randombattle-2312345678
+#
+# Corviknight is out of PP on every move by this point in a long stall game;
+# the parser must ignore Struggle rather than record it as a fifth move.
+|
+|move|p2a: Palafin|Jet Punch|p1a: Corviknight
+|-damage|p1a: Corviknight|121/271
+|-activate|p1a: Corviknight|move: Struggle
+|move|p1a: Corviknight|Struggle|p2a: Palafin
+|-damage|p2a: Palafin|88/100
+|-damage|p1a: Corviknight|54/271|[from] recoil
+|
+|-heal|p1a: Corviknight|70/271|[from] item: Leftovers
+|upkeep
+|turn|26
+>battle-gen9randombattle-2312345678
+|
+|move|p2a: Palafin|Wave Crash|p1a: Corviknight
+|-damage|p1a: Corviknight|0 fnt
+|-damage|p2a: Palafin|77/100|[from] Recoil
+|faint|p1a: Corviknight
+|
+|upkeep
+|
+|switch|p1a: Rotom|Rotom-Wash, L82|126/216
+|turn|27
+>battle-gen9randombattle-2312345678
+|
+|move|p1a: Rotom|Hydro Pump|p2a: Palafin
+|-damage|p2a: Palafin|0 fnt
+|faint|p2a: Palafin
+|
+|upkeep
+|
+|switch|p2a: Éclair♪|Furret, L94, F|54/100
+|turn|28
+>battle-gen9randombattle-2312345678
+|
+# Furret is the faster of the two, so the Choice item comes off BEFORE Rotom's
+# move: only the Hydro Pump that follows can count towards a lock.
+|move|p2a: Éclair♪|Knock Off|p1a: Rotom
+|-damage|p1a: Rotom|84/216
+|-enditem|p1a: Rotom|Choice Specs|[from] move: Knock Off|[of] p2a: Éclair♪
+|move|p1a: Rotom|Hydro Pump|p2a: Éclair♪
+|-damage|p2a: Éclair♪|0 fnt
+|faint|p2a: Éclair♪
+|
+|win|AlphaTester

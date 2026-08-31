@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Randbats Live</title>
+<meta name="description" content="Randbats Live collects nothing. What it stores, what leaves your browser, and why.">
+<style>
+  :root {
+    --ground:#f6f7f9; --surface:#fff; --hair:#dde2ea; --ink:#14181e;
+    --dim:#4a5462; --signal:#1d47c9; --sunken:#eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#0f1218; --surface:#171b23; --hair:#2a303b; --ink:#eef1f6;
+      --dim:#a3adbd; --signal:#7fb2ff; --sunken:#1e232c;
+    }
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  main { max-width:46rem; margin:0 auto; padding:56px 24px 96px; }
+  h1 { font-size:clamp(28px,5vw,40px); line-height:1.15; letter-spacing:-.02em; margin:0 0 8px; text-wrap:balance; }
+  h2 { font-size:22px; letter-spacing:-.01em; margin:44px 0 10px; text-wrap:balance; }
+  h3 { font-size:17px; margin:28px 0 8px; }
+  p, li { color:var(--ink); }
+  em { color:var(--dim); font-style:normal; }
+  a { color:var(--signal); text-underline-offset:2px; }
+  code {
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.88em;
+    background:var(--sunken); border:1px solid var(--hair); border-radius:4px; padding:1px 5px;
+  }
+  table { width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; display:block; overflow-x:auto; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--hair); vertical-align:top; }
+  th { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); font-weight:600; }
+  blockquote { margin:18px 0; padding:12px 16px; border-left:2px solid var(--signal); background:var(--sunken); border-radius:0 6px 6px 0; }
+  blockquote p { margin:0; }
+  hr { border:0; border-top:1px solid var(--hair); margin:40px 0; }
+  strong { font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+<h1>Privacy Policy — Randbats Live</h1>
+<p><em>Last updated: 2026-08-30</em></p>
+<h2>The short version</h2>
+<p><strong>Randbats Live collects nothing.</strong> No personal data, no browsing history, no
+battle logs, no analytics, no telemetry. There is no account, no login, and no
+server belonging to this extension — nothing is sent to the author of this
+extension, ever, because there is nowhere for it to be sent.</p>
+<p>Two kinds of request do leave your browser: the public Pokémon set-data files,
+and the Pokémon sprite images the panel draws. Both are described below, and
+neither goes anywhere you were not already talking to.</p>
+<h2>What it stores, and where</h2>
+<p>Everything the extension remembers lives in <code>chrome.storage.local</code> <strong>on your own
+machine</strong>. It is never uploaded, never shared, and is removed when you uninstall
+the extension.</p>
+<table>
+<thead>
+<tr>
+<th>Stored</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Panel position, size, theme, collapsed state, open tab</td>
+<td>So the overlay stays where you put it</td>
+</tr>
+<tr>
+<td>Which cards you expanded, keyed by side and Pokémon identifier (e.g. <code>p2\|p2a: Gholdengo</code>)</td>
+<td>So a card you opened stays open. This list is never pruned, so it accumulates the names of Pokémon you have opened a card for</td>
+</tr>
+<tr>
+<td>Whether the overlay is shown, which side it tracks, when you last forced a refresh</td>
+<td>Your settings from the toolbar popup</td>
+</tr>
+<tr>
+<td>A cached copy of the public randbats set data, under one key per format (<code>sets:gen9randombattle</code>, …)</td>
+<td>So it doesn't refetch on every battle. The <strong>set of keys</strong> is therefore a durable record of which formats you have played</td>
+</tr>
+</tbody>
+</table>
+<p>That is the complete list. None of it leaves your machine, and none of it is
+readable by any website — <code>chrome.storage.local</code> is private to the extension.</p>
+<p>If you would rather not keep the format list, the toolbar popup's <strong>Refresh now</strong>
+button deletes every <code>sets:</code> key outright, and uninstalling the extension deletes
+all of it.</p>
+<h2>What leaves your browser</h2>
+<h3>1. The set data — public, static, identical for every user</h3>
+<ul>
+<li><code>https://data.pkmn.cc/randbats/stats/&lt;format&gt;.json</code></li>
+<li><code>https://raw.githubusercontent.com/pkmn/randbats/...</code> — used only if the first
+  is unreachable</li>
+</ul>
+<p>These are the community-maintained <a href="https://github.com/pkmn/randbats">pkmn/randbats</a>
+set files. The request carries no identifiers, no battle information and no query
+parameters — it is the same file every user of that format downloads.</p>
+<p>There is <strong>one request per format you play</strong>, not one in total: fourteen formats
+are supported, the copy is cached for six hours, and a format whose CDN request
+fails is retried once against the GitHub mirror. Over a long enough time you
+could cause up to fourteen distinct files to be fetched, refreshed periodically.
+One of them is fetched without you playing anything: on install the service
+worker warms the cache for <code>gen9randombattle</code>, because almost everyone plays it.</p>
+<h3>2. Pokémon sprites — from Showdown's own sprite server</h3>
+<p>Each card in the panel shows a Pokémon icon. Where the page's own client exposes
+<code>Dex.getPokemonIcon</code>, the panel simply applies the CSS that function hands back —
+Showdown's own icon sheet, drawn by the client's own code — and asks for no
+per-species file itself. Where it does not, which includes the whole
+protocol-reader fallback path, the panel falls back to a per-species image:</p>
+<ul>
+<li><code>https://play.pokemonshowdown.com/sprites/gen5/&lt;species&gt;.png</code></li>
+</ul>
+<p>Being honest about what that means: <strong>this request names a Pokémon that is in
+your battle</strong>, and like any image request it discloses your IP address and
+user-agent to the server that serves it. That server is
+<code>play.pokemonshowdown.com</code> — the site you are already on and already connected
+to, which already knows your IP, your account and your whole battle. So it tells
+Showdown nothing it did not already have, and it tells nobody else anything at
+all. It is still a network request that mentions your battle, so it is
+documented here rather than glossed over.</p>
+<p>On a replay page the sprite still comes from <code>play.pokemonshowdown.com</code> rather
+than the <code>replay.</code> host you are on. Same operator, same battle they already have
+a copy of.</p>
+<h3>And nothing else</h3>
+<p>The predictions, the damage numbers and the switch advice are all computed
+locally, in the page. <strong>No battle log, no chat, no username, no move, no result
+and no identifier is ever transmitted to anywhere.</strong> The only fact about your
+battle that crosses the network is a species name in a sprite URL, sent to the
+server already running the battle.</p>
+<h2>What it reads, and what it does not</h2>
+<p>On <code>play.pokemonshowdown.com</code> and <code>replay.pokemonshowdown.com</code> the extension
+reads the state of the battle you are watching — the Pokémon on the field, their
+revealed moves, items and abilities — in order to display it back to you. That
+reading is passive and what it reads stays in the page. (It is not <em>purely</em>
+passive; see "What it writes to the page" below.)</p>
+<p><strong>It does read two pieces of account information, and here is exactly what and
+why.</strong> To know which side of the battle is yours, it reads your own Showdown
+username from the <code>|updateuser|</code> line the server sends your client, and it reads
+both players' display names so it can label the panel — the header reads
+<code>RandomLadderer · 6/6 seen · turn 14</code>. Neither is stored in
+<code>chrome.storage.local</code>, neither is transmitted anywhere, and both are already on
+your screen. It reads no other account information: not your password, not your
+email, not your ladder rating, not your friends list, not your settings.</p>
+<p>It does not read any other site, and it stores nothing from chat. The
+protocol-reader fallback taps the battle socket, so every frame the server sends
+that client passes through it — chat and private messages included — but only
+battle commands (<code>|switch|</code>, <code>|move|</code>, <code>|-item|</code>, …) are parsed; everything else
+is discarded on the spot and nothing from it is kept, rendered or sent.</p>
+<h2>What it writes to the page</h2>
+<p>The extension is not purely passive, and the honest description is narrower than
+"read-only":</p>
+<ul>
+<li>It adds <strong>its own panel</strong> to the page, and a stylesheet whose every rule is
+  scoped to that panel's own <code>rbl-</code> class names. It does not modify Showdown's
+  own interface.</li>
+<li>To read the battle stream, <code>inject.js</code> replaces two <strong>browser globals</strong> in the
+  page: <code>window.WebSocket</code> (with a pass-through <code>Proxy</code> that adds a <code>message</code>
+  listener) and <code>XMLHttpRequest.prototype.open</code> / <code>.send</code> (which record the
+  response text of Showdown's own streaming requests). Both taps pass every
+  argument and every result through unchanged and observe only; they alter no
+  data and send nothing. They are, however, permanent for the lifetime of the
+  page.</li>
+<li>It does <strong>not</strong> patch any of Showdown's own methods, does not assign to
+  <code>battle.subscription</code>, and never sends anything over the socket. It cannot
+  make a move, send a message, or change the outcome of a battle.</li>
+</ul>
+<h2>Permissions, and why each is needed</h2>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>storage</code></td>
+<td>Remember your panel layout and settings, and cache the set data</td>
+</tr>
+<tr>
+<td><code>https://data.pkmn.cc/*</code></td>
+<td>Download the public set data</td>
+</tr>
+<tr>
+<td><code>https://raw.githubusercontent.com/pkmn/randbats/*</code></td>
+<td>Fallback source for the same file</td>
+</tr>
+<tr>
+<td>Site access on <code>play.pokemonshowdown.com</code> and <code>replay.pokemonshowdown.com</code>, from the content-script match patterns rather than a <code>host_permissions</code> entry</td>
+<td>Read the battle and draw the panel over it. This is what the install prompt is describing — see below</td>
+</tr>
+</tbody>
+</table>
+<p>There is deliberately <strong>no</strong> <code>tabs</code> permission. The toolbar popup talks to open
+tabs through <code>chrome.storage</code> instead, precisely so that permission isn't needed.</p>
+<p><strong>About site access on pokemonshowdown.com.</strong> The manifest declares no
+<code>host_permissions</code> entry for pokemonshowdown.com; instead its content scripts
+are declared statically, matching <code>https://play.pokemonshowdown.com/*</code> and
+<code>https://replay.pokemonshowdown.com/*</code>. Chrome treats a content-script match
+pattern as site access all the same, so the install prompt will say <strong>"Read and
+change your data on play.pokemonshowdown.com and replay.pokemonshowdown.com"</strong>
+and those hosts will appear under the extension's site-access settings. That
+prompt is accurate: the extension does read those two sites, and it does add its
+panel to them. What the declarative form buys is not less access to Showdown —
+it is that the extension holds no <em>broad</em> or optional host permissions, cannot
+be granted access to any other site, and cannot reach across to your other tabs.</p>
+<h2>Single purpose</h2>
+<p>Randbats Live has one purpose: <strong>to display information about Pokémon Showdown
+Random Battles while you play them.</strong> Every permission above serves that purpose
+and nothing else.</p>
+<h2>Remote code</h2>
+<p>The extension executes no remote code. All logic ships in the package and is
+reviewable in the source. The network requests it makes fetch JSON data files,
+which are parsed as data and never evaluated, and PNG images, which are only
+ever set as a CSS background.</p>
+<h2>Changes</h2>
+<p>If data handling ever changes, this policy will be updated and the change
+described in the extension's release notes before the new version ships.</p>
+<h2>Contact</h2>
+<p>Issues and questions: open an issue on the project's repository.</p>
+</main>
+</body>
+</html>

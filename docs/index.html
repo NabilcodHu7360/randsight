@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Randbats Live</title>
+<meta name="description" content="A Chrome extension that predicts the opposing team's sets live during a Pokémon Showdown Random Battle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same tokens as the in-extension guide — this is the same product, so it
+   should not look like a different one. */
+:root {
+  --ground:#f5f7fa; --surface:#fff; --sunken:#eceff4; --hair:#dde2ea; --edge:#b3bcc9;
+  --ink:#14181e; --dim:#4a5462; --faint:#6d7787; --signal:#1d47c9; --confirmed:#0a5c28;
+  --shadow:0 1px 2px rgba(18,24,34,.06), 0 8px 28px rgba(18,24,34,.07);
+  --display:'Archivo','Helvetica Neue','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#0f1218; --surface:#171b23; --sunken:#1e232c; --hair:#2a303b; --edge:#4d5665;
+    --ink:#eef1f6; --dim:#a3adbd; --faint:#8892a1; --signal:#7fb2ff; --confirmed:#5fdd93;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 34px rgba(0,0,0,.45);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+     font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:60rem;margin:0 auto;padding:0 28px 96px}
+
+header{padding:80px 0 40px;border-bottom:1px solid var(--hair);margin-bottom:44px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.13em;
+         text-transform:uppercase;color:var(--faint);margin:0 0 18px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(38px,6.4vw,64px);
+   line-height:1.02;letter-spacing:-.032em;margin:0 0 18px;text-wrap:balance;max-width:15ch}
+.stand{font-size:19px;line-height:1.55;color:var(--dim);margin:0;max-width:56ch}
+.stand strong{color:var(--ink);font-weight:600}
+
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.btn{display:inline-block;padding:9px 16px;border-radius:6px;text-decoration:none;
+     font-size:14.5px;font-weight:500;border:1px solid var(--edge);color:var(--ink)}
+.btn-1{background:var(--signal);border-color:var(--signal);color:#fff}
+.btn:hover{border-color:var(--signal)}
+.btn-1:hover{opacity:.9}
+
+h2{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;
+   margin:56px 0 8px;text-wrap:balance}
+p{margin:0 0 16px;max-width:66ch}
+.sub{color:var(--dim);font-size:15px;margin:0 0 24px;max-width:62ch}
+a{color:var(--signal);text-underline-offset:2px}
+code,.tok{font-family:var(--mono);font-size:.88em;background:var(--sunken);
+          border:1px solid var(--hair);border-radius:4px;padding:1px 5px}
+
+.shots{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:820px){.shots{grid-template-columns:repeat(3,1fr)}}
+.shots figure{margin:0}
+.shots a{display:block}
+.shots img{display:block;width:100%;border:1px solid var(--hair);border-radius:8px;
+           box-shadow:var(--shadow);background:#0f1218}
+.shots figcaption{font-size:13px;color:var(--dim);margin-top:9px;line-height:1.45}
+
+.grid{display:grid;gap:16px;grid-template-columns:1fr;margin-top:8px}
+@media (min-width:760px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:18px 20px}
+.card h3{font-family:var(--display);font-size:16px;margin:0 0 6px}
+.card p{font-size:14.5px;color:var(--dim);margin:0}
+
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--confirmed);font-weight:500}
+
+.steps{list-style:none;margin:0;padding:0;counter-reset:s;max-width:60ch}
+.steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;border-left:1px solid var(--hair);margin-left:11px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{content:counter(s);position:absolute;left:-11px;top:0;width:22px;height:22px;
+  display:grid;place-items:center;background:var(--surface);border:1px solid var(--edge);
+  border-radius:50%;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--dim)}
+
+footer{border-top:1px solid var(--hair);margin-top:72px;padding-top:24px;
+       color:var(--faint);font-size:13.5px;max-width:70ch}
+footer a{color:var(--dim)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Chrome extension · Pokémon Showdown</p>
+    <h1>Randbats Live</h1>
+    <p class="stand">Keeps a running estimate of what the opposing team is holding, and
+      tightens it every time they reveal a move, an item or a Tera type.
+      <strong>Not a set list — a posterior.</strong></p>
+    <div class="cta">
+      <a class="btn btn-1" href="https://github.com/NabilcodHu7360/randbats-live/releases/latest">Download</a>
+      <a class="btn" href="https://github.com/NabilcodHu7360/randbats-live">Source</a>
+      <a class="btn" href="privacy.html">Privacy</a>
+    </div>
+  </header>
+
+  <div class="shots">
+    <figure>
+      <a href="store/1-sets.png"><img src="store/1-sets.png" alt="The Sets tab: two opposing Pokémon cards showing role, per-move probabilities, item and Tera distributions."></a>
+      <figcaption>Every opposing Pokémon, with what's still uncertain about it.</figcaption>
+    </figure>
+    <figure>
+      <a href="store/2-damage.png"><img src="store/2-damage.png" alt="The Damage tab: a doubles pairing picker, a speed verdict, and damage in both directions."></a>
+      <figcaption>Both directions of the matchup, and who moves first.</figcaption>
+    </figure>
+    <figure>
+      <a href="store/3-switch.png"><img src="store/3-switch.png" alt="The Switch tab: each team member with the worst hit it would take and whether it survives."></a>
+      <figcaption>Who to bring in, ranked by what survives.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Why a model and not a lookup</h2>
+  <p class="sub">Random Battles draw a Pokémon's moves from a role, and the generator picks
+    the item <em>from</em> the moves it chose. What you have already seen genuinely changes
+    what is still possible.</p>
+
+  <p>The published data only gives marginals — how often each move appears — which cannot
+    answer a conditional question. Randbats Live samples the joint distribution from
+    Showdown's own team generator and ships it, so a revealed item tells it something about
+    the moveset and vice versa. Measured against the algorithm both other extensions use,
+    on 15,000 held-out Pokémon:</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Guessing the last move</h3>
+      <p>Log loss <span class="num">0.147</span> against <span class="num">0.271</span>,
+        with three moves revealed.</p>
+    </div>
+    <div class="card">
+      <h3>Naming their item</h3>
+      <p><span class="num">88.0%</span> against <span class="num">84.7%</span> — and a
+        revealed item improves the move prediction, which theirs cannot use at all.</p>
+    </div>
+    <div class="card">
+      <h3>Numbers that add up</h3>
+      <p>With two slots left, their displayed percentages sum past two on
+        <span class="num">23%</span> of Pokémon. Ours: <span class="num">0</span>.</p>
+    </div>
+  </div>
+
+  <h2>Install</h2>
+  <p class="sub">Not on the Chrome Web Store yet. Loading it unpacked takes a minute.</p>
+  <ol class="steps">
+    <li>Download the zip and unzip it somewhere permanent — Chrome reads the folder off disk every launch.</li>
+    <li>Open <code>chrome://extensions</code> and turn on <strong>Developer mode</strong>.</li>
+    <li>Click <strong>Load unpacked</strong> and pick the folder containing <code>manifest.json</code>.</li>
+    <li>Start a Random Battle. The panel appears by itself, and a guide to reading it opens on first install.</li>
+  </ol>
+
+  <h2>What it collects</h2>
+  <p>Nothing. No account, no analytics, no telemetry, and no server belonging to this
+    extension. <code>storage</code> is the only permission it asks for, used to remember
+    where you left the panel. Two kinds of request leave your browser — the public set-data
+    files and Pokémon sprites — and both are described in the
+    <a href="privacy.html">privacy policy</a>.</p>
+
+  <footer>
+    <p>By Mohammad Nabil Islam. MIT licensed. Damage calculation by
+      <a href="https://github.com/smogon/damage-calc">@smogon/calc</a>; set data from
+      <a href="https://github.com/pkmn/randbats">pkmn/randbats</a>; the shipped set tables are
+      generated with <a href="https://github.com/smogon/pokemon-showdown">Pokémon Showdown</a>'s
+      own team generator. Not affiliated with Smogon, Pokémon Showdown, or Nintendo/Game Freak.</p>
+  </footer>
+
+</div>
+</body>
+</html>

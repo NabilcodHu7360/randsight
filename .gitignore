@@ -1,0 +1,11 @@
+node_modules/
+
+# Fetched at test time from pkmn/randbats — not ours to redistribute in the
+# repo, and `npm run fetch-fixtures` regenerates them.
+test/fixtures/*.json
+
+# Test output and packaging artefacts.
+test/shot-*.png
+*.zip
+
+.DS_Store

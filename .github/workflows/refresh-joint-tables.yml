@@ -1,0 +1,87 @@
+name: Refresh joint tables
+
+# The joint tables in src/data/ are sampled from Pokémon Showdown's own set
+# generator. When a balance patch changes Random Battle sets, those tables go
+# stale — the extension detects that per species (via the move-pool fingerprint)
+# and falls back to the marginal model, so nothing breaks, but it does quietly
+# lose the joint model's accuracy until someone rebuilds.
+#
+# This job rebuilds them weekly and opens a PR only when the sets actually moved.
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'      # Mondays, 04:17 UTC
+  workflow_dispatch:           # and on demand
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # pokemon-showdown is only needed to BUILD the tables, never to run the
+      # extension, so it stays a dev dependency and is installed fresh here to
+      # pick up the latest sets.
+      - name: Install the current Showdown package
+        run: npm install --no-save pokemon-showdown
+
+      - name: Rebuild joint tables
+        run: node scripts/build-joint.js 60000
+
+      - name: Check whether the sets actually changed
+        id: diff
+        run: |
+          if git diff --quiet -- src/data/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Sets are unchanged — nothing to do."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- src/data/ | tee /tmp/diffstat.txt
+          fi
+
+      # A rebuild is only worth merging if the model still beats the baseline on
+      # freshly generated teams. If a patch broke an assumption, this fails and
+      # no PR is opened.
+      - name: Validate the new tables
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          mkdir -p /tmp/rb
+          curl -sSf -o /tmp/rb/g9stats.json \
+            https://data.pkmn.cc/randbats/stats/gen9randombattle.json \
+            || curl -sSf -o /tmp/rb/g9stats.json \
+               https://raw.githubusercontent.com/pkmn/randbats/main/data/stats/gen9randombattle.json
+          node test/joint.test.js 2000
+          node test/rivals.test.js 1500
+
+      - name: Open a pull request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/refresh-joint-tables
+          title: 'chore: refresh joint set tables'
+          commit-message: 'chore: refresh joint set tables from the current generator'
+          body: |
+            Random Battle sets have changed since the tables were last built.
+
+            Regenerated with `node scripts/build-joint.js 60000` and validated
+            against freshly generated teams (`test/joint.test.js`), which checks
+            the joint model still beats the marginal baseline and stays
+            calibrated.
+
+            ```
+            $(cat /tmp/diffstat.txt)
+            ```
+
+            Until this merges, species whose move pools changed fall back to the
+            marginal model automatically — accuracy drops, nothing breaks.
+          delete-branch: true

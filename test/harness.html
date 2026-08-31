@@ -1,0 +1,570 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Randbats Live — harness</title>
+<link rel="stylesheet" href="../src/overlay.css">
+<style>
+  body { margin:0; min-height:100vh; background:#0e1116;
+         font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:#7a8394; }
+  #log { padding:16px; white-space:pre-wrap; font-family:ui-monospace,Menlo,monospace; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="log">harness booting…</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Mock the bits of the Showdown page that inject.js reads.
+// Query flags: ?weather=sunnyday &terrain=electricterrain &screens=1
+// ---------------------------------------------------------------------------
+const Q = new URLSearchParams(location.search);
+
+// ---------------------------------------------------------------------------
+// Regression scenarios (test/regress.test.js). Every one is behind a query
+// flag and every default below is the harness's original behaviour, so the
+// other suites see exactly the page they saw before.
+//   ?socket=1      install a fake WebSocket before inject.js so the protocol
+//                  reader has something to tap (frames pushed by the test)
+//   ?noclient=1    never expose window.app — the client reader finds nothing
+//   ?setsfail=N    the first N getSets replies come back as failures
+//   ?unknownmon=1  put a species the vendored calc cannot build on our bench
+//   ?nanhp=1       our active has no numeric hp (the old "about NaN hits")
+//   ?spectate=1    no myPokemon: only what a spectator can see
+//   ?pos=off       seed a saved panel position from a much bigger monitor
+// ---------------------------------------------------------------------------
+const RQ = {
+  socket: !!Q.get('socket'),
+  noclient: !!Q.get('noclient'),
+  setsfail: parseInt(Q.get('setsfail') || '0', 10) || 0,
+  unknownmon: !!Q.get('unknownmon'),
+  nanhp: !!Q.get('nanhp'),
+  spectate: !!Q.get('spectate'),
+  pos: Q.get('pos') || ''
+};
+
+// Passive recorder: what the page bridge actually posted, so a test can ask
+// which reader produced each tick. It only listens — nothing here feeds back
+// into inject.js or content.js, and nothing else in the page reads it.
+window.__rblBridge = [];
+window.addEventListener('message', function (ev) {
+  if (ev.source !== window || !ev.data || ev.data.__rbl !== '__randbats_live__') return;
+  if (ev.data.type === 'battles') {
+    var rooms = ev.data.payload || [];
+    var first = rooms[0] || {};
+    window.__rblBridge.push({
+      type: 'battles',
+      sources: rooms.map(function (p) { return p.source; }),
+      turns: rooms.map(function (p) { return p.turn; }),
+      myMoves: first.myActive ? (first.myActive.moves || []) : null,
+      spectating: first.myActive ? !!first.myActive.spectating : null
+    });
+  } else if (ev.data.type === 'stalled') {
+    window.__rblBridge.push({ type: 'stalled', error: (ev.data.payload || {}).error || '' });
+  }
+  if (window.__rblBridge.length > 200) window.__rblBridge.splice(0, 100);
+});
+
+// Must be installed BEFORE inject.js runs, or its constructor Proxy has
+// nothing to wrap. Mirrors the socket shape used by test/protocol.test.js.
+if (RQ.socket) {
+  window.WebSocket = class FakeSocket extends EventTarget {
+    constructor(url, protocols) { super(); this.url = url; this.protocols = protocols; this.readyState = 1; window.__sock = this; }
+    send() {}
+    close() { this.readyState = 3; }
+  };
+}
+
+const BASE_SPE = {
+  'Dragapult': 142, 'Great Tusk': 87, 'Gholdengo': 84, 'Kingambit': 50,
+  'Iron Valiant': 116, 'Slowking-Galar': 30, 'Corviknight': 67
+};
+// Mirrors the shape of the real client's dex entries (verified on the live site).
+const ITEMS = {
+  'Choice Scarf': "Holder's Speed is 1.5x, but it can only select the first move it executes.",
+  'Assault Vest': "Holder's Sp. Def is 1.5x, but it can only select damaging moves.",
+  'Leftovers': 'At the end of every turn, holder restores 1/16 of its max HP.',
+  'Heavy-Duty Boots': 'When switching in, the holder is unaffected by hazards on its side of the field.'
+};
+const ABILITIES = {
+  'Good as Gold': 'This Pokemon is immune to Status moves used by other Pokemon.',
+  'Regenerator': 'This Pokemon restores 1/3 of its maximum HP, rounded down, when it switches out.',
+  'Protosynthesis': 'Sunny Day active or Booster Energy used: highest stat is 1.3x, or 1.5x if Speed.'
+};
+const MOVES = {
+  'Knock Off': { short: '1.5x damage if foe holds an item. Removes item.', type: 'Dark', category: 'Physical', basePower: 65, accuracy: 100, priority: 0, pp: 20 },
+  'Rapid Spin': { short: 'Free user from hazards/bind/Leech Seed; +1 Spe.', type: 'Normal', category: 'Physical', basePower: 50, accuracy: 100, priority: 0 },
+  'Sucker Punch': { short: 'Usually goes first. Fails if target is not attacking.', type: 'Dark', category: 'Physical', basePower: 70, accuracy: 100, priority: 1 },
+  'Will-O-Wisp': { short: 'Burns the target.', type: 'Fire', category: 'Status', basePower: 0, accuracy: 85, priority: 0, pp: 15 },
+  'Hex': { short: 'Power doubles if the target has a status ailment.', type: 'Ghost', category: 'Special', basePower: 65, accuracy: 100, priority: 0, pp: 10 },
+  'Make It Rain': { short: 'Lowers the user\u2019s Sp. Atk by 1.', type: 'Steel', category: 'Special', basePower: 120, accuracy: 100, priority: 0, pp: 5 }
+};
+
+function entry(name, obj) {
+  return Object.assign({ name, exists: !!obj, shortDesc: '', desc: '' }, obj || {});
+}
+
+window.Dex = {
+  species: { get: n => ({ baseStats: { spe: BASE_SPE[n] || 80 }, types: ['Normal'], num: 1 }) },
+  items: { get: n => entry(n, ITEMS[n] ? { shortDesc: ITEMS[n] } : null) },
+  abilities: { get: n => entry(n, ABILITIES[n] ? { shortDesc: ABILITIES[n] } : null) },
+  moves: {
+    get: n => {
+      const key = Object.keys(MOVES).find(k =>
+        k === n || k.toLowerCase().replace(/[^a-z0-9]/g, '') === String(n).toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const m = key ? MOVES[key] : null;
+      if (m) return entry(key, { shortDesc: m.short, type: m.type, category: m.category,
+                                 basePower: m.basePower, accuracy: m.accuracy, priority: m.priority, pp: m.pp });
+      return entry(n, m ? { shortDesc: m.short, type: m.type, category: m.category,
+                            basePower: m.basePower, accuracy: m.accuracy, priority: m.priority, pp: m.pp } : null);
+    }
+  },
+  getPokemonIcon: () => ''   // force the sprite-URL fallback path in the UI
+};
+
+function mon(o) {
+  return Object.assign({
+    speciesForme: '', name: '', ident: '', level: 100, gender: 'N', fainted: false,
+    hp: 100, maxhp: 100, status: '', moveTrack: [], item: '', prevItem: '',
+    ability: '', baseAbility: '', terastallized: '', boosts: {},
+    isActive() { return !!this._active; }
+  }, o);
+}
+
+const farPokemon = [
+  mon({ speciesForme: 'Dragapult', name: 'Dragapult', ident: 'p2: Dragapult', level: 77,
+        _active: true, hp: 71, maxhp: 100,
+        moveTrack: [['Dragon Darts', 1], ['U-turn', 1]] }),
+  mon({ speciesForme: 'Great Tusk', name: 'Great Tusk', ident: 'p2: Great Tusk', level: 77,
+        hp: 44, maxhp: 100,
+        moveTrack: [['Close Combat', 1], ['Rapid Spin', 1], ['Headlong Rush', 1]] }),
+  mon({ speciesForme: 'Gholdengo', name: 'Gholdengo', ident: 'p2: Gholdengo', level: 77,
+        moveTrack: [['Make It Rain', 1]], item: 'Choice Scarf', terastallized: 'Ghost' }),
+  mon({ speciesForme: 'Slowking-Galar', name: 'Slowking-Galar', ident: 'p2: Slowking-Galar',
+        level: 85, hp: 0, maxhp: 100, fainted: true,
+        moveTrack: [['Sludge Bomb', 1], ['Psychic Noise', 1], ['Future Sight', 1], ['Surf', 1]],
+        item: 'Assault Vest', baseAbility: 'Regenerator' }),
+  mon({ speciesForme: 'Kingambit', name: 'Kingambit', ident: 'p2: Kingambit', level: 74,
+        status: 'brn', hp: 88, maxhp: 100, moveTrack: [] }),
+  mon({ speciesForme: 'Corviknight', name: 'Corviknight', ident: 'p2: Corviknight', level: 80,
+        moveTrack: [['Brave Bird', 1], ['Body Press', 1]], item: 'Leftovers', prevItem: '' })
+];
+
+const nearPokemon = [
+  mon({ speciesForme: 'Iron Valiant', name: 'Iron Valiant', ident: 'p1: Iron Valiant',
+        level: 78, _active: true, hp: 244, maxhp: 244, moveTrack: [['Moonblast', 1]] }),
+  mon({ speciesForme: 'Blissey', name: 'Blissey', ident: 'p1: Blissey', level: 82,
+        hp: 600, maxhp: 600 }),
+  mon({ speciesForme: 'Ting-Lu', name: 'Ting-Lu', ident: 'p1: Ting-Lu', level: 76,
+        hp: 209, maxhp: 380 }),
+  mon({ speciesForme: 'Regieleki', name: 'Regieleki', ident: 'p1: Regieleki', level: 73,
+        hp: 0, maxhp: 240, fainted: true })
+];
+
+// What the server tells us about our OWN team: exact stats, exact moves.
+// Stats below are the real randbats values (85 EVs / 31 IVs / neutral) so the
+// adapter's reconstruction check should pass.
+const myPokemon = [{
+  ident: 'p1: Iron Valiant',
+  speciesForme: 'Iron Valiant',
+  level: 78,
+  stats: { atk: 248, def: 185, spa: 232, spd: 139, spe: 226 },
+  maxhp: 244,
+  moves: ['Moonblast', 'Close Combat', 'Knock Off', 'Swords Dance'],
+  item: 'Booster Energy',
+  baseAbility: 'Quark Drive',
+  ability: 'Quark Drive',
+  teraType: 'Fairy',
+  terastallized: '',
+  active: true
+}, {
+  ident: 'p1: Blissey', speciesForme: 'Blissey', level: 82,
+  stats: { atk: 40, def: 60, spa: 150, spd: 250, spe: 120 }, maxhp: 600,
+  moves: ['Soft-Boiled', 'Seismic Toss', 'Thunder Wave', 'Calm Mind'],
+  item: 'Heavy-Duty Boots', baseAbility: 'Natural Cure', ability: 'Natural Cure', teraType: 'Water'
+}, {
+  ident: 'p1: Ting-Lu', speciesForme: 'Ting-Lu', level: 76,
+  stats: { atk: 240, def: 230, spa: 110, spd: 180, spe: 110 }, maxhp: 380,
+  moves: ['Earthquake', 'Ruination', 'Stealth Rock', 'Whirlwind'],
+  item: 'Leftovers', baseAbility: "Vessel of Ruin", ability: "Vessel of Ruin", teraType: 'Poison'
+}, {
+  ident: 'p1: Regieleki', speciesForme: 'Regieleki', level: 73,
+  stats: { atk: 140, def: 120, spa: 180, spd: 120, spe: 300 }, maxhp: 240,
+  moves: ['Thunderbolt', 'Volt Switch', 'Rapid Spin', 'Explosion'],
+  item: 'Choice Scarf', baseAbility: 'Transistor', ability: 'Transistor', teraType: 'Electric'
+}];
+
+function side(sideid, name, list, isFar) {
+  const s = { sideid, id: sideid, name, totalPokemon: 6, pokemon: list, isFar,
+              active: list.filter(p => p._active) };
+  list.forEach(p => { p.side = s; });
+  return s;
+}
+// ?active=<name> makes a different foe the active one. Great Tusk has a genuinely
+// uncertain item (Assault Vest / Leftovers / Choice Band), which is what exercises
+// the item-marginalised damage path.
+// ?evidence=1 — the things the battle gives away that the set data cannot:
+// a Choice user that has already committed to a move, and a move whose PP is
+// spent. Kept behind a flag so the main fixture's numbers stay stable.
+if (Q.get('evidence')) {
+  const ghold = farPokemon.find(p => p.speciesForme === 'Gholdengo');
+  farPokemon.forEach(p => { p._active = false; });
+  ghold._active = true; ghold.hp = 100; ghold.fainted = false;
+  const drag = farPokemon.find(p => p.speciesForme === 'Dragapult');
+  // Hex has 10 PP and they have used all of it — it cannot happen again,
+  // whatever the posterior says.
+  drag.moveTrack = [['Dragon Darts', 1], ['U-turn', 1], ['Hex', 10]];
+  // Simulate the next turn: Gholdengo, holding a revealed Choice Scarf, uses
+  // Make It Rain a second time. The bridge takes its baseline on the first
+  // poll, so the lock only appears once it has actually committed.
+  // The client stores lastMove as an id, which is what the bridge normalises.
+  ghold.lastMove = 'makeitrain';
+  setTimeout(() => { ghold.moveTrack = [['Make It Rain', 2]]; }, 1200);
+}
+
+if (Q.get('intimidate')) {
+  // Their Intimidate dropped our attack. The client reports the MODIFIED atk;
+  // we reconstruct the base one. A mismatch here says nothing about the spread.
+  myPokemon[0].stats.atk = Math.floor(myPokemon[0].stats.atk * 2 / 3);
+  nearPokemon[0].boosts = { atk: -1 };
+}
+
+const wantActive = Q.get('active');
+if (wantActive) {
+  farPokemon.forEach(p => { p._active = false; });
+  const target = farPokemon.find(p => p.speciesForme.toLowerCase().replace(/[^a-z]/g, '') === wantActive);
+  if (target) { target._active = true; target.fainted = false; target.hp = 100; }
+}
+
+// --- regression scenario mutations, applied before the sides are built -----
+
+// A species that exists in the battle but not in the pinned @smogon/calc
+// snapshot. `makePokemon` throws on it, which is the case bug 5 is about.
+if (RQ.unknownmon) {
+  nearPokemon.push(mon({ speciesForme: 'Zzzynthian', name: 'Zzzynthian',
+                         ident: 'p1: Zzzynthian', level: 79, hp: 300, maxhp: 300 }));
+  myPokemon.push({
+    ident: 'p1: Zzzynthian', speciesForme: 'Zzzynthian', level: 79,
+    stats: { atk: 200, def: 200, spa: 200, spd: 200, spe: 200 }, maxhp: 300,
+    moves: ['Tackle'], item: 'Leftovers', baseAbility: 'Levitate',
+    ability: 'Levitate', teraType: 'Normal'
+  });
+}
+
+// Our active Pokemon with no numeric hp at all. `hp / maxhp` is NaN, which is
+// how "about NaN hits" reached the screen. The foe's HP is unreadable too, so
+// content.js's hpPercent() helper is on the path as well.
+if (RQ.nanhp) { delete nearPokemon[0].hp; delete farPokemon[5].hp; }
+
+// Spectating: the server never sends `myPokemon`, so the only moves available
+// are the ones on the visible moveTrack — including a Transform-tagged "*"
+// entry and a Struggle, neither of which is one of the four.
+if (RQ.spectate) {
+  myPokemon.length = 0;
+  nearPokemon[0].moveTrack = [['Moonblast', 1], ['*Hyper Beam', 1], ['Struggle', 1], ['Knock Off', 1]];
+}
+
+const p1 = side('p1', 'You', nearPokemon, false);
+const p2 = side('p2', 'RandomLadderer', farPokemon, true);
+
+p1.sideConditions = {};
+p2.sideConditions = Q.get('screens') ? { reflect: ['Reflect', 1, 5, 8] } : {};
+
+const battle = {
+  id: 'battle-gen9randombattle-2312345678',
+  sides: [p1, p2], p1, p2, nearSide: p1, farSide: p2, mySide: p1,
+  myPokemon,
+  weather: Q.get('weather') || '',
+  pseudoWeather: Q.get('terrain') ? [[Q.get('terrain'), 5, 8]] : [],
+  tier: '[Gen 9] Random Battle', gen: 9, gameType: 'singles',
+  turn: 14, ended: false, isReplay: false
+};
+const roomObj = { id: battle.id, battle };
+// ?noclient=1 leaves the client objects out entirely, so reader 1 finds
+// nothing and has to fall through to the protocol reader.
+if (!RQ.noclient) window.app = { rooms: { [battle.id]: roomObj }, curRoom: roomObj };
+
+// ---------------------------------------------------------------------------
+// Mock the extension APIs the content script uses.
+// ---------------------------------------------------------------------------
+const store = {};
+// A panel position saved on a much larger monitor. Seeded before content.js
+// reads storage, exactly as a real profile would have it.
+if (RQ.pos === 'off') store.rblUi = { pos: { left: '5200px', top: '4100px' } };
+
+// How many getSets replies still have to fail before the real data is served.
+let setsFailsLeft = RQ.setsfail;
+window.__setsAttempts = 0;
+
+window.chrome = {
+  storage: {
+    local: {
+      get(keys, cb) {
+        const out = {};
+        const list = keys === null ? Object.keys(store) : (Array.isArray(keys) ? keys : [keys]);
+        list.forEach(k => { if (k in store) out[k] = store[k]; });
+        cb(out);
+      },
+      set(obj, cb) { Object.assign(store, obj); if (cb) cb(); },
+      remove(keys, cb) { (Array.isArray(keys) ? keys : [keys]).forEach(k => delete store[k]); if (cb) cb(); }
+    },
+    // Listeners are recorded so a test can play back what the popup writes.
+    // Nothing in the page ever fires them on its own.
+    onChanged: {
+      _fns: [],
+      addListener(fn) { this._fns.push(fn); }
+    }
+  },
+  runtime: {
+    lastError: null,
+    onMessage: { addListener() {} },
+    // joint tables are served straight from the repo in the harness
+    getURL: p => '../' + p,
+    sendMessage(msg, cb) {
+      if (msg.type === 'getSets') {
+        window.__setsAttempts++;
+        // The service worker is torn down whenever Chrome feels like it, so a
+        // failed reply is routine and entirely recoverable.
+        if (setsFailsLeft > 0) {
+          setsFailsLeft--;
+          cb({ ok: false, error: 'The message port closed before a response was received.' });
+          return;
+        }
+        fetch('./fixtures/gen9randombattle.json')
+          .then(r => r.json())
+          .then(sets => cb({
+            ok: true, sets,
+            info: { ok: true, id: 'gen9randombattle', file: 'gen9randombattle', exact: true },
+            fetchedAt: Date.now() - 1000 * 60 * 12, stale: false, species: Object.keys(sets).length
+          }))
+          .catch(e => cb({ ok: false, error: e.message }));
+        return;
+      }
+      cb({ ok: true, entries: [] });
+    }
+  }
+};
+</script>
+
+<!-- page bridge (normally MAIN world) -->
+<script src="../src/inject.js"></script>
+<!-- extension side (normally ISOLATED world) -->
+<script src="../src/vendor/calc.js"></script>
+<script src="../src/formats.js"></script>
+<script src="../src/engine.js"></script>
+<script src="../src/joint.js"></script>
+<script src="../src/damage.js"></script>
+<script src="../src/advice.js"></script>
+<script src="../src/ui.js"></script>
+<script src="../src/content.js"></script>
+
+<script>
+// Expose a hook so Playwright can assert on what actually rendered.
+window.__harness = {
+  ready() { return !!document.querySelector('#rbl-panel .rbl-mon'); },
+  dump() {
+    return [...document.querySelectorAll('#rbl-panel .rbl-mon')].map(card => ({
+      name: card.querySelector('.rbl-name')?.firstChild?.textContent?.trim(),
+      chips: [...card.querySelectorAll('.rbl-chip')].map(c => c.textContent),
+      open: card.classList.contains('rbl-open'),
+      sections: [...card.querySelectorAll('.rbl-sec')].map(s => ({
+        title: s.querySelector('.rbl-sec-t span')?.textContent,
+        rows: [...s.querySelectorAll('.rbl-row')].map(r => ({
+          name: r.querySelector('.rbl-row-name').textContent,
+          pct: r.querySelector('.rbl-row-pct').textContent,
+          revealed: r.classList.contains('rbl-rev')
+        }))
+      })),
+      meta: [...card.querySelectorAll('.rbl-meta span')].map(m => m.textContent),
+      facts: [...card.querySelectorAll('.rbl-meta .rbl-fact')].map(f => ({
+        name: f.textContent, revealed: f.classList.contains('rbl-fact-seen')
+      })),
+      notes: [...card.querySelectorAll('.rbl-note')].map(n => n.textContent)
+    }));
+  },
+  subtitle() { return document.getElementById('rbl-sub')?.textContent; },
+  tabs() { return [...document.querySelectorAll('#rbl-tabs .rbl-tab')].map(b => b.textContent); },
+  activeTab() { return document.querySelector('#rbl-tabs .rbl-tab.rbl-tab-on')?.textContent; },
+  showTab(label) {
+    const b = [...document.querySelectorAll('#rbl-tabs .rbl-tab')].find(x => x.textContent === label);
+    if (b) b.click();
+  },
+  speed() {
+    const b = document.querySelector('#rbl-body .rbl-speed');
+    if (!b) return null;
+    return {
+      verdict: b.querySelector('.rbl-speed-v')?.textContent,
+      cls: b.querySelector('.rbl-speed-v')?.className,
+      numbers: b.querySelector('.rbl-speed-n')?.textContent,
+      scarfNote: b.querySelector('.rbl-speed-s')?.textContent || null
+    };
+  },
+  switches() {
+    return [...document.querySelectorAll('#rbl-body .rbl-sec .rbl-row')].map(r => ({
+      species: r.querySelector('.rbl-row-name').textContent.replace(/ · in now$/, ''),
+      active: / · in now$/.test(r.querySelector('.rbl-row-name').textContent),
+      dmg: r.querySelector('.rbl-dmg-pct')?.textContent,
+      survives: r.querySelector('.rbl-dmg-prob')?.textContent,
+      speed: r.querySelector('.rbl-spd-mark')?.textContent || null,
+      title: r.title || ''
+    }));
+  },
+  verdicts() {
+    const vs = [...document.querySelectorAll('#rbl-body .rbl-verdict')].map(v => v.textContent);
+    return { incoming: vs[0], outgoing: vs[1], all: vs };
+  },
+  colLabels() {
+    return [...document.querySelectorAll('#rbl-body .rbl-cols')]
+      .map(c => [...c.children].map(x => x.textContent));
+  },
+  swings() {
+    return [...document.querySelectorAll('#rbl-body .rbl-swing')].map(s => s.title);
+  },
+  cardFacts(name) {
+    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
+      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    if (!card) return null;
+    return [...card.querySelectorAll('.rbl-meta .rbl-fact')].map(f => f.textContent);
+  },
+  cardRowCount(name) {
+    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
+      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    if (!card) return 0;
+    return [...card.querySelectorAll('.rbl-row')].filter(r => !r.closest('[hidden]')).length;
+  },
+  moreButton(name) {
+    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
+      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    const b = card && card.querySelector('.rbl-more');
+    return b ? b.textContent : null;
+  },
+  clickMore(name) {
+    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
+      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    const b = card && card.querySelector('.rbl-more');
+    if (b) b.click();
+  },
+  damage() {
+    const secs = [...document.querySelectorAll('#rbl-body .rbl-sec')].map(s => ({
+      title: s.querySelector('.rbl-sec-t span')?.textContent,
+      rows: [...s.querySelectorAll('.rbl-row')].map(r => ({
+        move: r.querySelector('.rbl-row-name').textContent,
+        dmg: r.querySelector('.rbl-dmg-pct')?.textContent,
+        prob: r.querySelector('.rbl-dmg-prob')?.textContent,
+        ko: r.title || ''
+      }))
+    }));
+    return {
+      matchup: document.querySelector('#rbl-body .rbl-matchup')?.textContent,
+      notes: [...document.querySelectorAll('#rbl-body .rbl-assumes div')].map(d => d.textContent),
+      assumes: [...document.querySelectorAll('#rbl-body .rbl-assumes div')]
+        .map(d => d.textContent).filter(t => /Assumes|item is unknown/.test(t)).join(' '),
+      warning: document.querySelector('#rbl-body .rbl-note')?.textContent || null,
+      empty: document.querySelector('#rbl-body .rbl-empty b')?.textContent || null,
+      sections: secs
+    };
+  },
+  tipRows() {
+    return [...document.querySelectorAll('#rbl-panel .rbl-row.rbl-has-tip')]
+      .map(r => r.querySelector('.rbl-row-name').textContent)
+      .concat([...document.querySelectorAll('#rbl-panel .rbl-fact.rbl-has-tip')].map(f => f.textContent))
+      .concat([...document.querySelectorAll('#rbl-panel .rbl-opt.rbl-has-tip')].map(f => f.textContent));
+  },
+  hover(rowName) {
+    const row = [...document.querySelectorAll('#rbl-panel .rbl-row')]
+      .find(r => r.querySelector('.rbl-row-name').textContent === rowName)
+      || [...document.querySelectorAll('#rbl-panel .rbl-fact')]
+      .find(f => f.textContent === rowName)
+      // one-line attributes read "Leftovers 62%", so match on the leading name
+      || [...document.querySelectorAll('#rbl-panel .rbl-opt')]
+      .find(f => f.textContent.replace(/ [\d.]+%$| <0\.1%$/, '') === rowName);
+    if (!row) return null;
+    // A row with no dex entry gets no listener at all, so report that directly
+    // rather than reading whatever the last hover left on screen.
+    if (!row.classList.contains('rbl-has-tip')) return null;
+    row.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
+    const t = document.getElementById('rbl-tip');
+    if (!t || t.style.display === 'none') return null;
+    return {
+      title: t.querySelector('.rbl-tip-t')?.textContent,
+      meta: t.querySelector('.rbl-tip-m')?.textContent || '',
+      desc: t.querySelector('.rbl-tip-d')?.textContent,
+      inPanel: document.getElementById('rbl-panel').contains(t)
+    };
+  },
+  foot() { return document.getElementById('rbl-foot')?.textContent; },
+
+  // ---- regression helpers (test/regress.test.js) -------------------------
+  /** Everything the panel currently says, as one string. */
+  text() { return document.getElementById('rbl-panel')?.textContent || ''; },
+  /** The "no battle / something went wrong" placeholder, if one is showing. */
+  notice() {
+    const e = document.querySelector('#rbl-body .rbl-empty');
+    if (!e) return null;
+    return { title: e.querySelector('b')?.textContent || '', text: e.textContent || '' };
+  },
+  /** Panel geometry against the viewport, for the saved-position clamp. */
+  rect() {
+    const p = document.getElementById('rbl-panel');
+    if (!p) return null;
+    const r = p.getBoundingClientRect();
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom,
+             width: r.width, height: r.height,
+             vw: window.innerWidth, vh: window.innerHeight };
+  },
+  /** Every move name the body is currently showing, from any tab. */
+  bodyMoveNames() {
+    return [...document.querySelectorAll('#rbl-body .rbl-row .rbl-row-name')]
+      .map(n => n.textContent.trim());
+  },
+  /** What the bridge has posted, newest last. See the recorder below. */
+  bridgeLog() { return window.__rblBridge.slice(); },
+  turn() { return battle.turn; },
+  /** Advance the battle, which is what makes the bridge post again. */
+  bumpTurn(n) { battle.turn += (n || 1); return battle.turn; },
+  /**
+   * Make the client reader throw the way a Showdown client rewrite would:
+   * a property it walks every tick stops being readable.
+   */
+  breakReader() {
+    Object.defineProperty(farPokemon[0], 'moveTrack', {
+      configurable: true,
+      get() { throw new TypeError('moveTrack is not readable'); }
+    });
+    battle.turn += 31;
+    return battle.turn;
+  },
+  /** Push one raw socket frame at the protocol reader. */
+  pushFrame(frame) {
+    if (!window.__sock) return false;
+    window.__sock.dispatchEvent(new MessageEvent('message', { data: frame }));
+    return true;
+  },
+  setsAttempts() { return window.__setsAttempts; },
+  /**
+   * Exactly what popup/popup.js writes when "Reset panel position" is clicked,
+   * played back through chrome.storage the way the real popup reaches the page.
+   */
+  resetPanelPosition() {
+    const prev = store.rblUi || {};
+    const next = Object.assign({}, prev, { pos: null, size: null, collapsed: false });
+    store.rblUi = next;
+    chrome.storage.onChanged._fns.forEach(fn =>
+      fn({ rblUi: { oldValue: prev, newValue: next } }, 'local'));
+  },
+
+  openAll() {
+    document.querySelectorAll('#rbl-panel .rbl-mon:not(.rbl-open) .rbl-mon-head')
+      .forEach(h => h.click());
+  },
+  setLight(on) { document.getElementById('rbl-panel').classList.toggle('rbl-light', on); }
+};
+// The client opens its socket after boot; inject.js has already proxied the
+// constructor, so this is what the protocol reader ends up tapping.
+if (RQ.socket) new WebSocket('wss://sim3.psim.us/showdown/websocket');
+
+document.getElementById('log').textContent =
+  'harness ready — mock battle: gen9randombattle, turn 14, 6 opposing mons revealed';
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      # The engine suite runs against the REAL published set data rather than
+      # fixtures, which is the point of it — a change to the data shape should
+      # fail here rather than in someone's battle.
+      - name: Fetch set-data fixtures
+        run: npm run fetch-fixtures
+
+      # These need Showdown's own generator to produce held-out teams.
+      - name: Install the simulator
+        run: npm install pokemon-showdown --no-audit --no-fund
+
+      # test/chromium.js prefers an explicit path when one exists and otherwise
+      # lets playwright resolve its own install, so nothing needs setting here.
+      - name: Run the suite
+        run: npm test
+
+      - name: Check the package builds and contains only what it should
+        run: npm run package
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: randbats-live-zip
+          path: randbats-live.zip
+          if-no-files-found: warn

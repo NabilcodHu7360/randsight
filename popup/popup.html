@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Randbats Live</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --bg2: #f3f5f9; --line: #d9dee6;
+    --fg: #1a1f27; --dim: #626c7c; --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1f26; --bg2:#23272f; --line:#363c48; --fg:#e6e9ef; --dim:#98a1b3; --accent:#6ea8fe; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; width: 268px; background: var(--bg); color: var(--fg);
+    font: 12.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header { padding: 11px 12px 9px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; font-size: 13px; letter-spacing: .2px; }
+  header p { margin: 3px 0 0; color: var(--dim); font-size: 11px; }
+  section { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .row:last-child { margin-bottom: 0; }
+  label { font-size: 12px; }
+  .hint { color: var(--dim); font-size: 10.5px; margin-top: 2px; }
+  select, button {
+    font: inherit; font-size: 11.5px; color: var(--fg); background: var(--bg2);
+    border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; cursor: pointer;
+  }
+  button:hover, select:hover { border-color: var(--accent); }
+  button.wide { width: 100%; padding: 6px; }
+  .guide {
+    display: block; margin-top: 8px; text-align: center; font-size: 11.5px;
+    color: var(--accent); text-decoration: none; padding: 4px;
+    border-radius: 5px; border: 1px solid transparent;
+  }
+  .guide:hover { border-color: var(--line); background: var(--bg2); }
+  .sw { position: relative; width: 34px; height: 19px; flex: 0 0 auto; }
+  .sw input { opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .sw span {
+    position: absolute; inset: 0; border-radius: 999px; background: var(--line);
+    transition: background .15s; pointer-events: none;
+  }
+  .sw span::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+    background: #fff; border-radius: 50%; transition: transform .15s;
+  }
+  .sw input:checked + span { background: var(--accent); }
+  .sw input:checked + span::after { transform: translateX(15px); }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  td { padding: 2px 0; color: var(--dim); }
+  td.f { color: var(--fg); }
+  td.r { text-align: right; }
+  .empty { color: var(--dim); font-size: 11px; }
+  footer { padding: 8px 12px; color: var(--dim); font-size: 10px; }
+  footer a { color: var(--dim); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Randbats Live</h1>
+    <p>Bayesian set prediction on play.pokemonshowdown.com</p>
+  </header>
+
+  <section>
+    <div class="row">
+      <label for="enabled">Show overlay</label>
+      <span class="sw"><input type="checkbox" id="enabled" checked><span></span></span>
+    </div>
+    <div class="row">
+      <label for="side">Track</label>
+      <select id="side">
+        <option value="far">Opponent</option>
+        <option value="near">Your side</option>
+      </select>
+    </div>
+    <div class="hint">Drag the panel by its title bar; drag the bottom-right corner to resize.</div>
+  </section>
+
+  <section>
+    <div class="row"><label>Cached set data</label></div>
+    <table id="cache"><tbody><tr><td class="empty">nothing cached yet</td></tr></tbody></table>
+    <div class="row" style="margin-top:9px">
+      <button id="refresh" class="wide">Refresh now</button>
+      <button id="reset" class="wide">Reset panel position</button>
+      <a class="guide" href="../guide/guide.html" target="_blank" rel="noopener">Reading the panel — guide</a>
+    </div>
+  </section>
+
+  <footer>
+    Sets from <a href="https://github.com/pkmn/randbats" target="_blank" rel="noreferrer">pkmn/randbats</a>,
+    regenerated hourly from 100,000 simulated teams.
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

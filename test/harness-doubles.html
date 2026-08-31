@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Randbats Live — doubles harness</title>
+<link rel="stylesheet" href="../src/overlay.css">
+<style>body{margin:0;min-height:100vh;background:#0e1116;font:14px system-ui;color:#7a8394}#log{padding:16px;font-size:12px}</style>
+</head>
+<body>
+<div id="log">doubles harness booting…</div>
+
+<script>
+// Query string picks the scenario:  ?format=gen9randomdoublesbattle | gen9championsrandomdoublesbattle
+//                                   &mode=doubles | multi
+const Q = new URLSearchParams(location.search);
+const FORMAT = Q.get('format') || 'gen9randomdoublesbattle';
+const MODE = Q.get('mode') || 'doubles';
+
+const BASE_SPE = { 'Incineroar':60,'Rillaboom':85,'Amoonguss':30,'Flutter Mane':135,
+                   'Landorus-Therian':91,'Urshifu-Rapid-Strike':97,'Dragapult':142 };
+const MOVE_NAMES = {
+  dragondarts:'Dragon Darts', uturn:'U-turn', suckerpunch:'Sucker Punch', fireblast:'Fire Blast',
+  woodhammer:'Wood Hammer', knockoff:'Knock Off', grassyglide:'Grassy Glide',
+  earthquake:'Earthquake', ruination:'Ruination', whirlwind:'Whirlwind', stealthrock:'Stealth Rock',
+  seismictoss:'Seismic Toss', softboiled:'Soft-Boiled', calmmind:'Calm Mind', shadowball:'Shadow Ball'
+};
+window.Dex = {
+  species: { get: n => ({ baseStats:{spe:BASE_SPE[n]||80}, types:['Normal'], num:1 }) },
+  items:     { get: n => ({ name:n, exists:true, shortDesc:'desc of '+n }) },
+  abilities: { get: n => ({ name:n, exists:true, shortDesc:'desc of '+n }) },
+  // The server sends our own moves as ids; the real dex maps them to display
+  // names, and the panel would otherwise print "dragondarts" at the user.
+  moves:     { get: n => ({ name: MOVE_NAMES[n] || n, exists:true, shortDesc:'desc of '+n,
+                            type:'Normal', category:'Physical', basePower:80, accuracy:100,
+                            priority:0, pp:16 }) },
+  getPokemonIcon: () => ''
+};
+
+function mon(o){ return Object.assign({
+  speciesForme:'', name:'', ident:'', level:100, gender:'N', fainted:false, hp:100, maxhp:100,
+  status:'', moveTrack:[], item:'', prevItem:'', ability:'', baseAbility:'', terastallized:'',
+  boosts:{}, isActive(){ return !!this._active; } }, o); }
+
+function side(sideid, name, list){
+  const s={ sideid, id:sideid, name, totalPokemon:list.length>3?6:4, pokemon:list, ally:null,
+            active:list.filter(p=>p._active) };
+  list.forEach(p=>{p.side=s;});
+  return s;
+}
+
+let battle;
+if (MODE === 'multi') {
+  // Free-for-all shape: four sides, we're p1 with p3 as ally.
+  const p1 = side('p1','You',       [mon({speciesForme:'Dragapult',ident:'p1: Dragapult',level:77,_active:true})]);
+  const p3 = side('p3','AllyPlayer',[mon({speciesForme:'Rillaboom',ident:'p3: Rillaboom',level:81,_active:true})]);
+  const p2 = side('p2','FoeOne',    [mon({speciesForme:'Incineroar',ident:'p2: Incineroar',level:78,_active:true,
+                                          moveTrack:[['Fake Out',1]]})]);
+  const p4 = side('p4','FoeTwo',    [mon({speciesForme:'Amoonguss',ident:'p4: Amoonguss',level:86,
+                                          moveTrack:[['Spore',1]]})]);
+  p1.ally = p3; p3.ally = p1; p2.ally = p4; p4.ally = p2;
+  battle = { id:`battle-${FORMAT}-991`, sides:[p1,p2,p3,p4], p1,p2,p3,p4,
+             nearSide:p1, farSide:p2, mySide:p1, tier:'multi', gen:9, gameType:'doubles',
+             turn:5, ended:false, isReplay:false };
+} else {
+  const near = side('p1','You', [
+    mon({speciesForme:'Dragapult', ident:'p1: Dragapult', level:77, _active:true}),
+    mon({speciesForme:'Rillaboom', ident:'p1: Rillaboom', level:81, _active:true})
+  ]);
+  const far = side('p2','DoublesFoe', [
+    // both actives at once — the doubles case
+    mon({speciesForme:'Incineroar', ident:'p2: Incineroar', level:78, _active:true,
+         moveTrack:[['Fake Out',1],['Knock Off',1]], baseAbility:'Intimidate'}),
+    mon({speciesForme:'Amoonguss', ident:'p2: Amoonguss', level:86, _active:true,
+         moveTrack:[['Spore',1]], item:'Sitrus Berry'}),
+    mon({speciesForme:'Flutter Mane', ident:'p2: Flutter Mane', level:73, moveTrack:[]}),
+    mon({speciesForme:'Urshifu-Rapid-Strike', ident:'p2: Urshifu-Rapid-Strike', level:75,
+         hp:0, maxhp:100, fainted:true, moveTrack:[['Surging Strikes',1]]})
+  ]);
+  // The server's copy of our own team — exact stats and moves. Without it the
+  // Switch tab has nothing to rank, so the doubles path there goes untested.
+  // Exact randbats stats (85 EVs / 31 IVs / neutral) computed from the vendored
+  // calc, so the adapter's reconstruction check passes and the fixture doesn't
+  // fly a "stat reconstruction differs" warning that isn't about the product.
+  const myTeam = [
+    { ident:'p1: Dragapult', speciesForme:'Dragapult', level:77, teraType:'Dragon',
+      item:'choiceband', ability:'infiltrator', moves:['dragondarts','uturn','suckerpunch','fireblast'],
+      stats:{atk:229,def:160,spa:199,spd:160,spe:263}, hp:262, maxhp:262 },
+    { ident:'p1: Rillaboom', speciesForme:'Rillaboom', level:81, teraType:'Grass',
+      item:'assaultvest', ability:'grassysurge', moves:['woodhammer','uturn','knockoff','grassyglide'],
+      stats:{atk:249,def:192,spa:144,spd:160,spe:184}, hp:295, maxhp:295 },
+    { ident:'p1: Ting-Lu', speciesForme:'Ting-Lu', level:76, teraType:'Ghost',
+      item:'leftovers', ability:'vesselofruin', moves:['earthquake','ruination','whirlwind','stealthrock'],
+      stats:{atk:211,def:234,spa:128,spd:166,spe:112}, hp:361, maxhp:361 },
+    { ident:'p1: Blissey', speciesForme:'Blissey', level:84, teraType:'Fairy',
+      item:'heavydutyboots', ability:'naturalcure', moves:['seismictoss','softboiled','calmmind','shadowball'],
+      stats:{atk:65,def:65,spa:174,spd:275,spe:141}, hp:566, maxhp:566 }
+  ];
+  battle = { id:`battle-${FORMAT}-2312345678`, sides:[near,far], p1:near, p2:far,
+             nearSide:near, farSide:far, mySide:near, tier:'[Gen 9] Random Doubles Battle',
+             myPokemon: myTeam,
+             gen:9, gameType:'doubles', turn:7, ended:false, isReplay:false };
+  // The bench slots must also exist on the visible side or readMyTeam can't
+  // pair the two views.
+  myTeam.slice(2).forEach(sp => near.pokemon.push(mon({
+    speciesForme: sp.speciesForme, ident: sp.ident, level: sp.level
+  })));
+}
+
+const roomObj = { id: battle.id, battle };
+window.app = { rooms: { [battle.id]: roomObj }, curRoom: roomObj };
+
+const store={};
+window.chrome = {
+  storage:{ local:{
+    get(k,cb){const o={};(k===null?Object.keys(store):[].concat(k)).forEach(x=>{if(x in store)o[x]=store[x]});cb(o);},
+    set(o,cb){Object.assign(store,o); if(cb)cb();},
+    remove(k,cb){[].concat(k).forEach(x=>delete store[x]); if(cb)cb();} },
+    onChanged:{addListener(){}} },
+  runtime:{ lastError:null, onMessage:{addListener(){}},
+    getURL: p => '../' + p,
+    sendMessage(msg,cb){
+      if(msg.type==='getSets'){
+        const file = (globalThis.RBLFormats.resolve(msg.format,{gen:9}).file) || msg.format;
+        fetch(`./fixtures/${file}.json`).then(r=>{
+          if(!r.ok) throw new Error('no fixture for '+file);
+          return r.json();
+        }).then(sets=>cb({ok:true,sets,info:{ok:true,id:file,file,exact:true},
+                          fetchedAt:Date.now()-60000,stale:false,species:Object.keys(sets).length}))
+          .catch(e=>cb({ok:false,error:e.message}));
+        return;
+      }
+      cb({ok:true,entries:[]});
+    } }
+};
+</script>
+
+<script src="../src/inject.js"></script>
+<script src="../src/vendor/calc.js"></script>
+<script src="../src/formats.js"></script>
+<script src="../src/engine.js"></script>
+<script src="../src/joint.js"></script>
+<script src="../src/damage.js"></script>
+<script src="../src/advice.js"></script>
+<script src="../src/ui.js"></script>
+<script src="../src/content.js"></script>
+
+<script>
+window.__harness = {
+  ready(){ return !!document.querySelector('#rbl-panel .rbl-mon'); },
+  emptyTitle(){ return document.querySelector('#rbl-panel .rbl-empty b')?.textContent || null; },
+  subtitle(){ return document.getElementById('rbl-sub')?.textContent; },
+  foot(){ return document.getElementById('rbl-foot')?.textContent; },
+  openAll(){ document.querySelectorAll('#rbl-panel .rbl-mon:not(.rbl-open) .rbl-mon-head').forEach(h=>h.click()); },
+  cards(){
+    return [...document.querySelectorAll('#rbl-panel .rbl-mon')].map(c=>({
+      name: c.querySelector('.rbl-name')?.firstChild?.textContent?.trim(),
+      owner: c.querySelector('.rbl-chip-owner')?.textContent || null,
+      active: c.classList.contains('rbl-active'),
+      fainted: c.classList.contains('rbl-fainted'),
+      sections: [...c.querySelectorAll('.rbl-sec')].map(s=>({
+        title: s.querySelector('.rbl-sec-t span')?.textContent,
+        rows: [...s.querySelectorAll('.rbl-row')].map(r=>({
+          name:r.querySelector('.rbl-row-name').textContent,
+          pct:r.querySelector('.rbl-row-pct').textContent }))
+      })),
+      facts: [...c.querySelectorAll('.rbl-fact')].map(f=>f.textContent),
+      lines: [...c.querySelectorAll('.rbl-line')].map(l=>l.textContent)
+    }));
+  },
+  showTab(label){
+    const b=[...document.querySelectorAll('#rbl-tabs .rbl-tab')].find(x=>x.textContent===label);
+    if(b) b.click();
+  },
+  pairs(){
+    return [...document.querySelectorAll('#rbl-body .rbl-pair')]
+      .map(b=>({label:b.textContent, on:b.classList.contains('rbl-pair-on')}));
+  },
+  clickPair(label){
+    const b=[...document.querySelectorAll('#rbl-body .rbl-pair')].find(x=>x.textContent===label);
+    if(b) b.click();
+  },
+  matchup(){ return document.querySelector('#rbl-body .rbl-matchup')?.textContent || null; },
+  switchHead(){ return document.querySelector('#rbl-body .rbl-matchup')?.textContent || null; }
+};
+document.getElementById('log').textContent = `doubles harness: ${FORMAT} / ${MODE}`;
+</script>
+</body>
+</html>
