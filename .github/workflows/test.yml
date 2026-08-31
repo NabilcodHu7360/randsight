@@ -33,10 +33,29 @@ jobs:
       - name: Install the simulator
         run: npm install pokemon-showdown --no-audit --no-fund
 
-      # test/chromium.js prefers an explicit path when one exists and otherwise
-      # lets playwright resolve its own install, so nothing needs setting here.
-      - name: Run the suite
-        run: npm test
+      # One step per suite: a red X in the UI then names the suite that failed
+      # instead of just "npm test", which is the difference between reading a
+      # log and guessing at one.
+      - name: engine — the model against the real published data
+        run: npm run test:engine
+      - name: ui — bridge to overlay, in real Chromium
+        run: npm run test:ui
+      - name: doubles — both actives, pairing picker, FFA
+        run: npm run test:doubles
+      - name: damage — vendored calc, item x ability posterior
+        run: npm run test:damage
+      - name: a11y — keyboard, names, measured contrast
+        run: npm run test:a11y
+      - name: protocol — a whole battle through the real parser
+        run: npm run test:protocol
+      - name: regress — the bugs the pre-release audit found
+        run: npm run test:regress
+      - name: load — the packaged extension actually loads
+        run: npm run test:load
+      - name: joint — the joint model on held-out teams
+        run: npm run test:joint
+      - name: rivals — against the other extensions' algorithm
+        run: npm run test:rivals
 
       - name: Check the package builds and contains only what it should
         run: npm run package
