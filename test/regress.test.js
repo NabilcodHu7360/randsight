@@ -43,7 +43,7 @@ function sockFrame(chunk) { return 'a' + JSON.stringify([chunk]); }
 // reader is the only thing running. Used by the reconnect block.
 const PROTO_HARNESS = `<!doctype html>
 <meta charset="utf-8">
-<title>randbats-live — regress protocol harness</title>
+<title>randsight — regress protocol harness</title>
 <body>
 <script>
 window.WebSocket = class FakeSocket extends EventTarget {
@@ -54,11 +54,11 @@ window.WebSocket = class FakeSocket extends EventTarget {
 </script>
 <script src="/src/inject.js"></script>
 <script>
-var TAG = '__randbats_live__';
+var TAG = '__randsight__';
 window.__last = null;
 window.__pending = null;
 window.addEventListener('message', function (ev) {
-  if (ev.source !== window || !ev.data || ev.data.__rbl !== TAG) return;
+  if (ev.source !== window || !ev.data || ev.data.__rs !== TAG) return;
   if (ev.data.type !== 'battles') return;
   window.__last = ev.data.payload;
   if (window.__pending) window.__pending(ev.data.payload);
@@ -72,7 +72,7 @@ window.__snap = function () {
     var done = false;
     window.__pending = function (p) { if (done) return; done = true; window.__pending = null; res(p); };
     setTimeout(function () { if (done) return; done = true; window.__pending = null; res(window.__last); }, 400);
-    window.postMessage({ __rbl: TAG, type: 'resync' }, location.origin);
+    window.postMessage({ __rs: TAG, type: 'resync' }, location.origin);
   });
 };
 </script>
@@ -108,7 +108,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     page.on('pageerror', e => page.__errors.push(String(e)));
     await page.goto(`http://127.0.0.1:${PORT}/test/harness.html${qs ? '?' + qs : ''}`);
     if (opts.waitForPanelOnly) {
-      await page.waitForFunction(() => !!document.getElementById('rbl-panel'), { timeout: 20000 });
+      await page.waitForFunction(() => !!document.getElementById('rs-panel'), { timeout: 20000 });
     } else {
       await page.waitForFunction(() => window.__harness && window.__harness.ready(), { timeout: 20000 });
     }
@@ -132,7 +132,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       sub: window.__harness.subtitle(),
       text: window.__harness.text(),
       notice: window.__harness.notice(),
-      cards: document.querySelectorAll('#rbl-panel .rbl-mon').length,
+      cards: document.querySelectorAll('#rs-panel .rs-mon').length,
       log: window.__harness.bridgeLog()
     }));
 
@@ -157,11 +157,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   // ===================================================================
   {
     const page = await open('');
-    const cardsBefore = await page.evaluate(() => document.querySelectorAll('#rbl-panel .rbl-mon').length);
+    const cardsBefore = await page.evaluate(() => document.querySelectorAll('#rs-panel .rs-mon').length);
     ok(cardsBefore === 6, `the panel is drawing normally first (${cardsBefore} cards)`);
 
     await page.evaluate(() => {
-      globalThis.RBLDamage.matchup = function () { throw new Error('calc exploded'); };
+      globalThis.RSDamage.matchup = function () { throw new Error('calc exploded'); };
       window.__harness.bumpTurn(1);
     });
     await sleep(1200);
@@ -169,7 +169,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const after = await page.evaluate(() => ({
       sub: window.__harness.subtitle(),
       notice: window.__harness.notice(),
-      cards: document.querySelectorAll('#rbl-panel .rbl-mon').length
+      cards: document.querySelectorAll('#rs-panel .rs-mon').length
     }));
     ok(after.notice && /Something went wrong/.test(after.notice.title),
       `a failed render says so on screen (notice: "${after.notice && after.notice.title}")`);
@@ -187,9 +187,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await sleep(800);
     const tabbed = await page.evaluate(() => ({
       tab: window.__harness.activeTab(),
-      cards: document.querySelectorAll('#rbl-body .rbl-mon').length,
-      empty: !!document.querySelector('#rbl-body .rbl-empty'),
-      rows: document.querySelectorAll('#rbl-body .rbl-row').length
+      cards: document.querySelectorAll('#rs-body .rs-mon').length,
+      empty: !!document.querySelector('#rs-body .rs-empty'),
+      rows: document.querySelectorAll('#rs-body .rs-row').length
     }));
     ok(tabbed.tab === 'Damage' && tabbed.cards === 0 && tabbed.empty && tabbed.rows === 0,
       'switching tabs after a failed render still shows a body that matches the tab — ' +
@@ -211,7 +211,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     }
     await sleep(1500);
     const ctrlFoot = await ctrl.evaluate(() => window.__harness.foot());
-    const ctrlCards = await ctrl.evaluate(() => document.querySelectorAll('#rbl-panel .rbl-mon').length);
+    const ctrlCards = await ctrl.evaluate(() => document.querySelectorAll('#rs-panel .rs-mon').length);
     ok(/fallback reader/.test(ctrlFoot || ''),
       `with no client object the panel still works off the socket and says so: "${ctrlFoot}"`);
     ok(ctrlCards > 0, `the fallback really is driving the panel (${ctrlCards} cards)`);
@@ -273,7 +273,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       await page.evaluate(() => window.__harness.bumpTurn(1));
       await sleep(800);
       const shot = await page.evaluate(() => ({
-        cards: document.querySelectorAll('#rbl-panel .rbl-mon').length,
+        cards: document.querySelectorAll('#rs-panel .rs-mon').length,
         attempts: window.__harness.setsAttempts()
       }));
       cards = shot.cards; attempts = shot.attempts;
@@ -326,13 +326,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   // ===================================================================
   console.log('\n[6] Gen 1-2 speed used the Gen 3+ formula, which inverted the');
   console.log('    "who moves first" banner in two shipped formats');
-  console.log('    (direct RBLAdvice/RBLCalcLib call in the page — the harness fixture is Gen 9 only)');
+  console.log('    (direct RSAdvice/RSCalcLib call in the page — the harness fixture is Gen 9 only)');
   // ===================================================================
   {
     const page = await open('');
     const res = await page.evaluate(() => {
-      const L = globalThis.RBLCalcLib;
-      const A = globalThis.RBLAdvice;
+      const L = globalThis.RSCalcLib;
+      const A = globalThis.RSAdvice;
       const EV = 85, IV = 31;
       // The formula the panel used for every generation before the fix.
       const gen3Formula = (base, level) =>
@@ -390,12 +390,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   // ===================================================================
   console.log('\n[7] The verdict used the threat-ranked first row, so the banner could say');
   console.log('    "You survive" directly above a row showing 105-124%');
-  console.log('    (matchup built by a direct RBLDamage call, then drawn by the real renderer)');
+  console.log('    (matchup built by a direct RSDamage call, then drawn by the real renderer)');
   // ===================================================================
   {
     const page = await open('');
     const res = await page.evaluate(() => {
-      const D = globalThis.RBLDamage;
+      const D = globalThis.RSDamage;
       // A weak move they almost certainly have, and a lethal one they probably
       // do not. Threat ranking (damage x probability) puts the weak one first.
       const out = D.matchup({
@@ -409,16 +409,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
         foeRaw: { species: 'Kingambit', level: 74, boosts: { atk: 2 }, terastallized: '' }
       });
       // Draw it with the real renderer so the assertion is on what a player reads.
-      const st = globalThis.RBLUI.getState();
+      const st = globalThis.RSUI.getState();
       st.tab = 'damage';
-      globalThis.RBLUI.render({
+      globalThis.RSUI.render({
         subtitle: 'regression', mons: [], damage: out, speed: null, switches: null,
         footLeft: '', footRight: ''
       });
       return {
         rows: out.incoming.map(r => ({ move: r.move, hi: Math.round(r.hiPct), lo: Math.round(r.loPct) })),
-        banner: (document.querySelector('#rbl-body .rbl-verdict') || {}).textContent || '',
-        shownRows: [...document.querySelectorAll('#rbl-body .rbl-row .rbl-row-name')].map(n => n.textContent)
+        banner: (document.querySelector('#rs-body .rs-verdict') || {}).textContent || '',
+        shownRows: [...document.querySelectorAll('#rs-body .rs-row .rs-row-name')].map(n => n.textContent)
       };
     });
 
@@ -471,10 +471,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.evaluate(() => window.__harness.openAll());
     await sleep(400);
     const corv = await page.evaluate(() => {
-      const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-        .find(c => /Corviknight/.test(c.querySelector('.rbl-name').textContent));
+      const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+        .find(c => /Corviknight/.test(c.querySelector('.rs-name').textContent));
       if (!card) return null;
-      const bar = card.querySelector('.rbl-hp');
+      const bar = card.querySelector('.rs-hp');
       return { text: card.textContent, hasBar: !!bar, barLabel: bar ? bar.getAttribute('aria-label') : null };
     });
     ok(!!corv && !/NaN/.test(corv.text),

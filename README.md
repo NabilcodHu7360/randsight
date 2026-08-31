@@ -1,4 +1,4 @@
-# Randbats Live
+# Randsight
 
 A Chrome extension that watches your Pokémon Showdown Random Battle and tells you, live,
 what the opposing Pokémon is probably running — not just "here are all the possible sets",
@@ -157,7 +157,7 @@ The extension isn't on the Web Store, so load it unpacked:
 1. Unzip this folder somewhere permanent — Chrome reads it from disk every launch.
 2. Open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and pick the `randbats-live` folder (the one with `manifest.json`).
+4. Click **Load unpacked** and pick the `randsight` folder (the one with `manifest.json`).
 5. Open <https://play.pokemonshowdown.com> and start a Random Battle.
 
 Needs Chrome 111+ (for `world: "MAIN"` content scripts). Works in Edge, Brave and other
@@ -397,7 +397,7 @@ and neither is a stable API, so the bridge uses two readers and prefers whicheve
 
 **What the bridge writes.** It never patches a method belonging to Showdown, never touches
 `battle.subscription`, never sends anything over the socket, and adds nothing to the page but
-its own panel and a stylesheet whose every rule is scoped to that panel's `rbl-` class names.
+its own panel and a stylesheet whose every rule is scoped to that panel's `rs-` class names.
 It does, however, replace two *browser* globals for the lifetime of the page:
 `window.WebSocket` becomes a pass-through `Proxy` whose `construct` trap adds a `message`
 listener to each new socket, and `XMLHttpRequest.prototype.open` / `.send` are overwritten to
@@ -554,7 +554,7 @@ Every colour-coded state carries a redundant non-colour cue — `✓` seen or sa
 or lethal, `⊘` cannot happen, `⚠` bad news — painted from a `data-cue` attribute so it never
 enters the text content. Contrast was measured rather than eyeballed, compositing the
 translucent damage bar into the background stack, which is where the old palette actually
-failed: `--rbl-fg-faint` was **1.57:1** in dark and **1.44:1** in light. Every token now clears
+failed: `--rs-fg-faint` was **1.57:1** in dark and **1.44:1** in light. Every token now clears
 WCAG AA in both themes, worst measured 5.56:1. Meaning is no longer carried by opacity — a
 fainted row was 1.9:1 text — and `prefers-reduced-motion` and `prefers-contrast` are honoured.
 
@@ -585,14 +585,14 @@ See [PRIVACY.md](PRIVACY.md) for the full account, including what is kept in
 
 ## Licence
 
-Randbats Live is MIT licensed — see [LICENSE](LICENSE).
+Randsight is MIT licensed — see [LICENSE](LICENSE).
 
 Third-party notices for everything shipped inside the package, or used to generate data
 shipped inside it, are in [THIRD-PARTY-LICENSES.txt](THIRD-PARTY-LICENSES.txt).
 
 ## Credits
 
-Randbats Live is by **Mohammad Nabil Islam** ([@NabilcodHu7360](https://github.com/NabilcodHu7360)),
+Randsight is by **Mohammad Nabil Islam** ([@NabilcodHu7360](https://github.com/NabilcodHu7360)),
 MIT licensed — see [LICENSE](LICENSE).
 
 Damage calculation by [@smogon/calc](https://github.com/smogon/damage-calc) (MIT), vendored as

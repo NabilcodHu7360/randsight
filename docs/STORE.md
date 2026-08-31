@@ -269,3 +269,21 @@ worth more than the bytes.
 
 `scripts/build-vendor.sh` now pins both `@smogon/calc` and `esbuild`, so
 "regenerate it yourself and compare" is a true claim rather than a hopeful one.
+
+---
+
+## The store screenshots need retaking
+
+`docs/store/*.png` were taken when the extension was called Randbats Live, and
+the panel's own title bar is in every one of them. They are now pictures of a
+product that no longer exists under that name.
+
+Retake all three from a live game, then:
+
+```bash
+python3 scripts/anonymise-shots.py docs/store shot1.png shot2.png shot3.png
+```
+
+That replaces both account handles again. `2-damage.png` needed retaking anyway
+— it predates v1.7.0 and shows a stat warning that no longer fires plus the old
+pairing-button wording.

@@ -1,5 +1,5 @@
 /*
- * Randbats Live — service worker.
+ * Randsight — service worker.
  *
  * Sole job: fetch and cache the randbats set data. pkmn/randbats regenerates
  * every format hourly from 100,000 simulated teams, so we cache with a short
@@ -33,7 +33,7 @@ function writeCache(file, data) {
       if (chrome.runtime.lastError) {
         // Out of quota, most likely. The data is fine and the panel works; it
         // just refetches next time instead of reading a cache that isn't there.
-        console.warn('[randbats-live] cache write failed:', chrome.runtime.lastError.message);
+        console.warn('[randsight] cache write failed:', chrome.runtime.lastError.message);
       }
       resolve(rec);
     });
@@ -60,7 +60,7 @@ function fetchJsonInner(url, ctl) {
 
 function download(file) {
   return fetchJson(CDN + file + '.json').catch(function (e1) {
-    console.warn('[randbats-live] CDN failed, trying mirror:', e1.message);
+    console.warn('[randsight] CDN failed, trying mirror:', e1.message);
     return fetchJson(MIRROR + file + '.json');
   });
 }
@@ -81,7 +81,7 @@ function getSets(file, force) {
       });
     }).catch(function (err) {
       if (cached) {
-        console.warn('[randbats-live] refresh failed, serving stale cache:', err.message);
+        console.warn('[randsight] refresh failed, serving stale cache:', err.message);
         return {
           data: cached.data, fetchedAt: cached.fetchedAt, stale: true,
           species: cached.species, error: err.message
@@ -97,10 +97,10 @@ function getSets(file, force) {
 }
 
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
-  if (!msg || msg.__rbl !== true) return;
+  if (!msg || msg.__rs !== true) return;
 
   if (msg.type === 'getSets') {
-    var info = self.RBLFormats.resolve(msg.format);
+    var info = self.RSFormats.resolve(msg.format);
     if (!info.ok) { sendResponse({ ok: false, error: info.reason, info: info }); return true; }
     getSets(info.file, !!msg.force).then(function (r) {
       sendResponse({
@@ -138,7 +138,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
 chrome.runtime.onInstalled.addListener(function (details) {
   // Warm the cache for the format almost everyone plays.
   getSets('gen9randombattle', false).catch(function (e) {
-    console.warn('[randbats-live] prefetch failed:', e.message);
+    console.warn('[randsight] prefetch failed:', e.message);
   });
 
   // Open the guide once, on a genuine first install. Not on every update —

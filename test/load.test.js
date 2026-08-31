@@ -35,7 +35,7 @@ function ok(cond, msg) {
   ok(!/chrome\.tabs/.test(popupSrc), 'popup does not touch chrome.tabs');
 
   console.log('\n[2] Load into Chromium');
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rbl-'));
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rs-'));
   const ctx = await chromium.launchPersistentContext(userDataDir, {
     ...require('./chromium'),
     headless: true,
@@ -55,16 +55,16 @@ function ok(cond, msg) {
 
   if (sw) {
     const formatsOk = await sw.evaluate(() => {
-      const a = self.RBLFormats.resolve('battle-gen9randombattle-2312345678');
-      const b = self.RBLFormats.resolve('battle-gen9randombattleblitz-99');
-      const c = self.RBLFormats.resolve('battle-gen9hackmonscup-1');
-      const d = self.RBLFormats.resolve('battle-gen9randombattlemayhem-1');
+      const a = self.RSFormats.resolve('battle-gen9randombattle-2312345678');
+      const b = self.RSFormats.resolve('battle-gen9randombattleblitz-99');
+      const c = self.RSFormats.resolve('battle-gen9hackmonscup-1');
+      const d = self.RSFormats.resolve('battle-gen9randombattlemayhem-1');
       return {
         base: a.ok && a.file === 'gen9randombattle',
         alias: b.ok && b.file === 'gen9randombattle',
         unsupported: !c.ok,
         approx: d.ok && d.exact === false && d.file === 'gen9randombattle',
-        gen: self.RBLFormats.generation('gen1randombattle')
+        gen: self.RSFormats.generation('gen1randombattle')
       };
     });
     ok(formatsOk.base, 'room id -> gen9randombattle');
@@ -138,7 +138,7 @@ function ok(cond, msg) {
       // the specimen animates a reveal; after it settles the row must read "seen"
       revealed: document.querySelector('#reveal .pct')?.textContent
     }));
-    ok(/Randbats Live/.test(g.title), `titled "${g.title}"`);
+    ok(/Randsight/.test(g.title), `titled "${g.title}"`);
     ok(g.shots === g.images && g.images === 3, `all ${g.images} screenshots loaded`);
     ok(g.ko, 'the KO glossary is present');
     ok(g.revealed === 'seen', `the opening specimen resolves to a reveal (${g.revealed})`);
@@ -155,8 +155,8 @@ function ok(cond, msg) {
     // allowlist held: no node_modules, no test harnesses with a mocked chrome
     // API, no dev scripts, no repo docs.
     const { execSync } = require('child_process');
-    execSync('bash scripts/package.sh /tmp/rbl-pkg-check.zip', { cwd: EXT });
-    const listing = execSync('unzip -Z1 /tmp/rbl-pkg-check.zip', { encoding: 'utf8' })
+    execSync('bash scripts/package.sh /tmp/rs-pkg-check.zip', { cwd: EXT });
+    const listing = execSync('unzip -Z1 /tmp/rs-pkg-check.zip', { encoding: 'utf8' })
       .split('\n').map(s => s.trim()).filter(f => f && !f.endsWith('/'));
 
     const allowed = /^(manifest\.json|LICENSE|THIRD-PARTY-LICENSES\.txt|PRIVACY\.md|(src|popup|guide|icons)\/)/;
@@ -166,9 +166,9 @@ function ok(cond, msg) {
       'no tests, harnesses, fixtures or dev scripts ship');
     ok(listing.includes('LICENSE') && listing.includes('THIRD-PARTY-LICENSES.txt'),
       'the licence files ship — the vendored MIT bundle requires them');
-    const bytes = fs.statSync('/tmp/rbl-pkg-check.zip').size;
+    const bytes = fs.statSync('/tmp/rs-pkg-check.zip').size;
     ok(bytes < 5 * 1024 * 1024, `package is ${(bytes / 1024).toFixed(0)} KB`);
-    fs.rmSync('/tmp/rbl-pkg-check.zip', { force: true });
+    fs.rmSync('/tmp/rs-pkg-check.zip', { force: true });
   }
 
   console.log('\n[5] Content scripts on a Showdown-shaped page');
@@ -199,10 +199,10 @@ function ok(cond, msg) {
     `joint table is fetchable from the page origin (${jointOk} species)`);
 
   const injected = await page.evaluate(() => ({
-    panel: !!document.getElementById('rbl-panel'),
-    empty: (document.querySelector('#rbl-panel .rbl-empty b') || {}).textContent || '',
-    styled: !!document.getElementById('rbl-panel') &&
-      getComputedStyle(document.getElementById('rbl-panel')).position === 'fixed'
+    panel: !!document.getElementById('rs-panel'),
+    empty: (document.querySelector('#rs-panel .rs-empty b') || {}).textContent || '',
+    styled: !!document.getElementById('rs-panel') &&
+      getComputedStyle(document.getElementById('rs-panel')).position === 'fixed'
   }));
   ok(injected.panel, 'overlay injected on play.pokemonshowdown.com');
   ok(injected.styled, 'overlay stylesheet applied');

@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-OUT="${1:-randbats-live.zip}"
+OUT="${1:-randsight.zip}"
 rm -f "$OUT"
 
 zip -qr "$OUT" \

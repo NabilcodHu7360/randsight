@@ -14,7 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 require('../src/engine.js');
-const E = globalThis.RBLEngine;
+const E = globalThis.RSEngine;
 
 const DATA = process.env.RBL_DATA || '/tmp/rb';
 const TEAMS = parseInt(process.argv[2], 10) || 3000;

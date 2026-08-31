@@ -24041,5 +24041,5 @@
 
   // entry.js
   var import_calc = __toESM(require_dist());
-  globalThis.RBLCalcLib = { Generations: import_calc.Generations, Pokemon: import_calc.Pokemon, Move: import_calc.Move, Field: import_calc.Field, Side: import_calc.Side, calculate: import_calc.calculate };
+  globalThis.RSCalcLib = { Generations: import_calc.Generations, Pokemon: import_calc.Pokemon, Move: import_calc.Move, Field: import_calc.Field, Side: import_calc.Side, calculate: import_calc.calculate };
 })();

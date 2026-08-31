@@ -1,5 +1,5 @@
 /*
- * Randbats Live — inference engine
+ * Randsight — inference engine
  *
  * Models a Random Battle set as a Conditional Bernoulli (CB) sample:
  *
@@ -399,7 +399,7 @@
     return Math.floor((Math.floor(((2 * baseSpe + iv + Math.floor(ev / 4)) * level) / 100) + 5));
   }
 
-  root.RBLEngine = {
+  root.RSEngine = {
     buildSpecies: buildSpecies,
     predict: predict,
     speedStat: speedStat,

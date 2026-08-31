@@ -1,7 +1,7 @@
-Third-party licences — Randbats Live
+Third-party licences — Randsight
 ====================================
 
-Randbats Live itself is MIT licensed, Copyright (c) 2026 Mohammad Nabil Islam;
+Randsight itself is MIT licensed, Copyright (c) 2026 Mohammad Nabil Islam;
 see LICENSE in this directory.
 
 This file reproduces the licence and copyright notices of the third-party

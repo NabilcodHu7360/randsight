@@ -16,8 +16,8 @@ TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Privacy Policy — Randbats Live</title>
-<meta name="description" content="Randbats Live collects nothing. What it stores, what leaves your browser, and why.">
+<title>Privacy Policy — Randsight</title>
+<meta name="description" content="Randsight collects nothing. What it stores, what leaves your browser, and why.">
 <style>
   :root {{
     --ground:#f6f7f9; --surface:#fff; --hair:#dde2ea; --ink:#14181e;

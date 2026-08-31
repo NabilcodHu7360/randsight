@@ -19,7 +19,7 @@ var refreshedAt = 0;
 
 function save() {
   chrome.storage.local.set({
-    rblSettings: { enabled: enabledEl.checked, side: sideEl.value, refreshedAt: refreshedAt }
+    rsSettings: { enabled: enabledEl.checked, side: sideEl.value, refreshedAt: refreshedAt }
   });
 }
 
@@ -44,14 +44,14 @@ function renderCache(entries) {
 }
 
 function loadCache() {
-  chrome.runtime.sendMessage({ __rbl: true, type: 'cacheStatus' }, function (res) {
+  chrome.runtime.sendMessage({ __rs: true, type: 'cacheStatus' }, function (res) {
     if (chrome.runtime.lastError || !res || !res.ok) return;
     renderCache(res.entries);
   });
 }
 
-chrome.storage.local.get('rblSettings', function (got) {
-  var s = got.rblSettings || {};
+chrome.storage.local.get('rsSettings', function (got) {
+  var s = got.rsSettings || {};
   enabledEl.checked = s.enabled !== false;
   sideEl.value = s.side === 'near' ? 'near' : 'far';
   refreshedAt = s.refreshedAt || 0;
@@ -65,7 +65,7 @@ sideEl.addEventListener('change', save);
 refreshEl.addEventListener('click', function () {
   refreshEl.disabled = true;
   refreshEl.textContent = 'Refreshing…';
-  chrome.runtime.sendMessage({ __rbl: true, type: 'clearCache' }, function () {
+  chrome.runtime.sendMessage({ __rs: true, type: 'clearCache' }, function () {
     refreshedAt = Date.now();
     save();
     refreshEl.disabled = false;
@@ -80,10 +80,10 @@ loadCache();
 // and then opened on a laptop, it can end up somewhere you cannot grab it —
 // and the drag handle goes with it. This is the way back.
 resetEl.addEventListener('click', function () {
-  chrome.storage.local.get('rblUi', function (got) {
-    var ui = got.rblUi || {};
+  chrome.storage.local.get('rsUi', function (got) {
+    var ui = got.rsUi || {};
     ui.pos = null; ui.size = null; ui.collapsed = false;
-    chrome.storage.local.set({ rblUi: ui }, function () {
+    chrome.storage.local.set({ rsUi: ui }, function () {
       resetEl.textContent = 'Panel reset';
       setTimeout(function () { resetEl.textContent = 'Reset panel position'; }, 1400);
     });

@@ -22,7 +22,7 @@ VERSION="$(node -e "console.log(require('@smogon/calc/package.json').version)")"
 cat > entry.js <<'JS'
 // Bundle entry: expose exactly the pieces the extension uses on one global.
 import { Generations, Pokemon, Move, Field, Side, calculate } from '@smogon/calc';
-globalThis.RBLCalcLib = { Generations, Pokemon, Move, Field, Side, calculate };
+globalThis.RSCalcLib = { Generations, Pokemon, Move, Field, Side, calculate };
 JS
 
 # NOT minified, deliberately: a single-line 480 KB bundle inside a content

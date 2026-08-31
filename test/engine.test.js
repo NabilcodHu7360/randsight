@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 require('../src/engine.js');
-const E = globalThis.RBLEngine;
+const E = globalThis.RSEngine;
 
 const DATA_DIR = process.env.RBL_DATA || '/tmp/rb';
 let failures = 0;

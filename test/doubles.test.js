@@ -51,7 +51,7 @@ async function scenario(page, qs) {
   {
     await page.goto(`http://127.0.0.1:${PORT}/test/harness-doubles.html`);
     const r = await page.evaluate(() => {
-      const F = globalThis.RBLFormats;
+      const F = globalThis.RSFormats;
       const g = id => F.resolve('battle-' + id + '-123', { gen: 9 });
       return {
         doubles: g('gen9randomdoublesbattle'),
@@ -122,8 +122,8 @@ async function scenario(page, qs) {
     const head = await page.evaluate(() => window.__harness.switchHead());
     ok(head && /Incineroar/.test(head) && /Amoonguss/.test(head) && /or/.test(head),
       `switch advice is against the whole opposing field: "${head}"`);
-    const rows = await page.evaluate(() => [...document.querySelectorAll('#rbl-body .rbl-row')]
-      .map(r => ({ name: r.querySelector('.rbl-row-name').textContent, title: r.title })));
+    const rows = await page.evaluate(() => [...document.querySelectorAll('#rs-body .rs-row')]
+      .map(r => ({ name: r.querySelector('.rs-row-name').textContent, title: r.title })));
     ok(rows.length >= 3, `${rows.length} team slots ranked`);
     ok(rows.some(r => /Incineroar’s|Amoonguss’s/.test(r.title)),
       `each row names which of the two would land the worst hit (e.g. "${rows.find(r => r.title)?.title}")`);

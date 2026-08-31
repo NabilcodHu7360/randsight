@@ -192,10 +192,10 @@ and role:
 
 - top option revealed or ≥ 95% → push onto `facts`, rendered as one muted word on a single
   line at the bottom of the card, keeping its hover description;
-- otherwise → a `.rbl-line`: `ITEM  Assault Vest 80% · Leftovers 20%`, one row tall.
+- otherwise → a `.rs-line`: `ITEM  Assault Vest 80% · Leftovers 20%`, one row tall.
 
 Only moves get bar rows, and only those revealed or ≥ 15%; the rest go into a `hidden`
-`.rbl-extra` behind a `.rbl-more` toggle. A distribution with a single possible value is
+`.rs-extra` behind a `.rs-more` toggle. A distribution with a single possible value is
 dropped entirely (`rolesTotal` exists so the engine can distinguish "one role" from "one role
 survived the evidence"). Anything that is already a header chip — a revealed Tera type — is
 not repeated as a fact.

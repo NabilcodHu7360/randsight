@@ -83,7 +83,7 @@
 
   function isDoubles(fileId) { return /doubles/.test(fileId || ''); }
 
-  root.RBLFormats = {
+  root.RSFormats = {
     SUPPORTED: SUPPORTED,
     EXACT_ALIASES: EXACT_ALIASES,
     APPROX_ALIASES: APPROX_ALIASES,

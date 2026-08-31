@@ -55,7 +55,7 @@ function sockFrame(chunk) { return 'a' + JSON.stringify([chunk]); }
 
 const HARNESS = `<!doctype html>
 <meta charset="utf-8">
-<title>randbats-live — protocol harness</title>
+<title>randsight — protocol harness</title>
 <body>
 <script>
 // A socket that behaves like the client's, so inject.js taps a real EventTarget.
@@ -69,11 +69,11 @@ window.WebSocket = class FakeSocket extends EventTarget {
 </script>
 <script src="/src/inject.js"></script>
 <script>
-var TAG = '__randbats_live__';
+var TAG = '__randsight__';
 window.__last = null;
 window.__pending = null;
 window.addEventListener('message', function (ev) {
-  if (ev.source !== window || !ev.data || ev.data.__rbl !== TAG) return;
+  if (ev.source !== window || !ev.data || ev.data.__rs !== TAG) return;
   if (ev.data.type !== 'battles') return;
   window.__last = ev.data.payload;
   if (window.__pending) window.__pending(ev.data.payload);
@@ -90,7 +90,7 @@ window.__snap = function () {
     var done = false;
     window.__pending = function (p) { if (done) return; done = true; window.__pending = null; res(p); };
     setTimeout(function () { if (done) return; done = true; window.__pending = null; res(window.__last); }, 400);
-    window.postMessage({ __rbl: TAG, type: 'resync' }, location.origin);
+    window.postMessage({ __rs: TAG, type: 'resync' }, location.origin);
   });
 };
 </script>

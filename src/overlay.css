@@ -1,4 +1,4 @@
-/* Randbats Live overlay. Everything is namespaced under #rbl-panel and uses
+/* Randsight overlay. Everything is namespaced under #rs-panel and uses
    `all: revert` guards where Showdown's global styles would otherwise leak in. */
 
 /* Colour tokens are picked against WCAG AA (4.5:1) for the *worst* background
@@ -6,21 +6,21 @@
    translucent bar behind the text rather than the card. The bar tints are
    capped at the alphas below for the same reason; raising one silently breaks
    the contrast budget, and test/a11y.test.js measures the rendered result. */
-#rbl-panel {
-  --rbl-bg: #171a20;
-  --rbl-bg-2: #1e222a;
-  --rbl-bg-3: #272c36;
-  --rbl-line: #3d4453;        /* decorative hairlines */
-  --rbl-edge: #717a8c;        /* boundaries of real controls: >= 3:1 */
-  --rbl-focus: #8bb9ff;
-  --rbl-fg: #eef1f6;
-  --rbl-fg-dim: #adb6c5;
-  --rbl-fg-faint: #949eb0;
-  --rbl-accent: #8fbcff;
-  --rbl-known: #61e396;
-  --rbl-warn: #f9c64d;
-  --rbl-danger: #ffa1a1;
-  --rbl-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+#rs-panel {
+  --rs-bg: #171a20;
+  --rs-bg-2: #1e222a;
+  --rs-bg-3: #272c36;
+  --rs-line: #3d4453;        /* decorative hairlines */
+  --rs-edge: #717a8c;        /* boundaries of real controls: >= 3:1 */
+  --rs-focus: #8bb9ff;
+  --rs-fg: #eef1f6;
+  --rs-fg-dim: #adb6c5;
+  --rs-fg-faint: #949eb0;
+  --rs-accent: #8fbcff;
+  --rs-known: #61e396;
+  --rs-warn: #f9c64d;
+  --rs-danger: #ffa1a1;
+  --rs-shadow: 0 8px 32px rgba(0, 0, 0, .45);
 
   position: fixed;
   z-index: 2147483000;
@@ -30,11 +30,11 @@
   max-height: calc(100vh - 96px);
   display: flex;
   flex-direction: column;
-  background: var(--rbl-bg);
-  color: var(--rbl-fg);
-  border: 1px solid var(--rbl-line);
+  background: var(--rs-bg);
+  color: var(--rs-fg);
+  border: 1px solid var(--rs-line);
   border-radius: 10px;
-  box-shadow: var(--rbl-shadow);
+  box-shadow: var(--rs-shadow);
   font: 12px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden;
   resize: both;
@@ -42,78 +42,78 @@
   min-height: 120px;
 }
 
-#rbl-panel.rbl-light {
-  --rbl-bg: #ffffff;
-  --rbl-bg-2: #f3f5f8;
-  --rbl-bg-3: #e6eaf0;
-  --rbl-line: #ccd3dd;
-  --rbl-edge: #78828f;
-  --rbl-focus: #1a45c4;
-  --rbl-fg: #161a20;
-  --rbl-fg-dim: #48525f;
-  --rbl-fg-faint: #5a6371;
-  --rbl-accent: #1a45c4;
-  --rbl-known: #095c27;
-  --rbl-warn: #7d3a06;
-  --rbl-danger: #a81919;
-  --rbl-shadow: 0 8px 28px rgba(20, 30, 50, .18);
+#rs-panel.rs-light {
+  --rs-bg: #ffffff;
+  --rs-bg-2: #f3f5f8;
+  --rs-bg-3: #e6eaf0;
+  --rs-line: #ccd3dd;
+  --rs-edge: #78828f;
+  --rs-focus: #1a45c4;
+  --rs-fg: #161a20;
+  --rs-fg-dim: #48525f;
+  --rs-fg-faint: #5a6371;
+  --rs-accent: #1a45c4;
+  --rs-known: #095c27;
+  --rs-warn: #7d3a06;
+  --rs-danger: #a81919;
+  --rs-shadow: 0 8px 28px rgba(20, 30, 50, .18);
 }
 
-#rbl-panel * { box-sizing: border-box; }
+#rs-panel * { box-sizing: border-box; }
 
 /* ---------------- redundant non-colour cues ----------------
    Every state the panel paints with colour also carries a glyph, drawn from
    a data-cue attribute so it never lands in textContent. Colour-blind users
    and washed-out screens get the same information; everyone else gets one
    extra character. */
-#rbl-panel [data-cue]::before {
+#rs-panel [data-cue]::before {
   content: attr(data-cue);
   font-style: normal;
   font-weight: 700;
   margin-right: 3px;
   flex: 0 0 auto;
 }
-#rbl-panel .rbl-chip[data-cue]::before,
-#rbl-panel .rbl-dmg-prob[data-cue]::before { margin-right: 2px; }
+#rs-panel .rs-chip[data-cue]::before,
+#rs-panel .rs-dmg-prob[data-cue]::before { margin-right: 2px; }
 
 /* ---------------- focus ----------------
-   .rbl-btn / .rbl-tab / .rbl-pair / .rbl-more all start from `all: unset`,
+   .rs-btn / .rs-tab / .rs-pair / .rs-more all start from `all: unset`,
    which strips the UA focus ring, so the panel has to draw its own. Both
    themes get a token that clears 3:1 against every surface it lands on. */
-#rbl-panel :focus-visible {
-  outline: 2px solid var(--rbl-focus);
+#rs-panel :focus-visible {
+  outline: 2px solid var(--rs-focus);
   outline-offset: 1px;
   border-radius: 3px;
 }
 /* Anything inside an overflow:hidden box has to draw its ring inwards. */
-#rbl-panel .rbl-mon-head:focus-visible,
-#rbl-panel .rbl-row:focus-visible,
-#rbl-panel .rbl-tab:focus-visible,
-#rbl-body:focus-visible { outline-offset: -2px; }
+#rs-panel .rs-mon-head:focus-visible,
+#rs-panel .rs-row:focus-visible,
+#rs-panel .rs-tab:focus-visible,
+#rs-body:focus-visible { outline-offset: -2px; }
 
 /* ---------------- header ---------------- */
 
-#rbl-head {
+#rs-head {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 7px 8px 7px 10px;
-  background: var(--rbl-bg-2);
-  border-bottom: 1px solid var(--rbl-line);
+  background: var(--rs-bg-2);
+  border-bottom: 1px solid var(--rs-line);
   cursor: move;
   user-select: none;
   flex: 0 0 auto;
 }
 
-#rbl-title {
+#rs-title {
   font-weight: 650;
   letter-spacing: .2px;
   font-size: 12px;
   white-space: nowrap;
 }
 
-#rbl-sub {
-  color: var(--rbl-fg-faint);
+#rs-sub {
+  color: var(--rs-fg-faint);
   font-size: 10.5px;
   white-space: nowrap;
   overflow: hidden;
@@ -121,28 +121,28 @@
   flex: 1 1 auto;
 }
 
-.rbl-btn {
+.rs-btn {
   all: unset;
   cursor: pointer;
-  color: var(--rbl-fg-dim);
+  color: var(--rs-fg-dim);
   font-size: 12px;
   line-height: 1;
   padding: 3px 5px;
   border-radius: 4px;
   flex: 0 0 auto;
 }
-.rbl-btn:hover { background: var(--rbl-bg-3); color: var(--rbl-fg); }
-.rbl-btn.rbl-on { color: var(--rbl-accent); }
+.rs-btn:hover { background: var(--rs-bg-3); color: var(--rs-fg); }
+.rs-btn.rs-on { color: var(--rs-accent); }
 
 /* ---------------- tabs ---------------- */
 
-#rbl-tabs {
+#rs-tabs {
   display: flex;
   flex: 0 0 auto;
-  background: var(--rbl-bg-2);
-  border-bottom: 1px solid var(--rbl-line);
+  background: var(--rs-bg-2);
+  border-bottom: 1px solid var(--rs-line);
 }
-.rbl-tab {
+.rs-tab {
   all: unset;
   flex: 1 1 0;
   text-align: center;
@@ -150,116 +150,116 @@
   padding: 5px 0 4px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
   border-bottom: 2px solid transparent;
 }
-.rbl-tab:hover { color: var(--rbl-fg-dim); background: var(--rbl-bg-3); }
+.rs-tab:hover { color: var(--rs-fg-dim); background: var(--rs-bg-3); }
 /* Selected: an underline that is present rather than transparent, and a
    heavier weight. Neither needs the accent colour to be legible. */
-.rbl-tab.rbl-tab-on {
-  color: var(--rbl-accent);
-  border-bottom-color: var(--rbl-accent);
+.rs-tab.rs-tab-on {
+  color: var(--rs-accent);
+  border-bottom-color: var(--rs-accent);
   font-weight: 800;
 }
 
-#rbl-panel.rbl-collapsed #rbl-tabs { display: none; }
+#rs-panel.rs-collapsed #rs-tabs { display: none; }
 
 /* ---------------- damage ---------------- */
 
-.rbl-matchup {
+.rs-matchup {
   padding: 4px 6px 6px;
-  color: var(--rbl-fg-dim);
+  color: var(--rs-fg-dim);
   font-size: 11.5px;
   text-align: center;
-  border-bottom: 1px solid var(--rbl-line);
+  border-bottom: 1px solid var(--rs-line);
   margin-bottom: 6px;
 }
-.rbl-matchup b { color: var(--rbl-fg); }
+.rs-matchup b { color: var(--rs-fg); }
 
 /* Alphas are part of the contrast budget — see the token block at the top. */
-.rbl-row.rbl-dmg > .rbl-fill { background: rgba(248, 113, 113, .14); }
-.rbl-row.rbl-dmg.rbl-rev > .rbl-fill { background: rgba(248, 113, 113, .2); }
+.rs-row.rs-dmg > .rs-fill { background: rgba(248, 113, 113, .14); }
+.rs-row.rs-dmg.rs-rev > .rs-fill { background: rgba(248, 113, 113, .2); }
 
-.rbl-dmg-pct {
+.rs-dmg-pct {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
   font-size: 10.5px;
   font-weight: 600;
-  color: var(--rbl-fg);
+  color: var(--rs-fg);
   min-width: 58px;
   text-align: right;
 }
-.rbl-dmg-prob {
+.rs-dmg-prob {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
   font-size: 10px;
   /* --dim, not --faint: this column sits on top of a tinted bar, and faint
      only clears AA against the plain surfaces. */
-  color: var(--rbl-fg-dim);
+  color: var(--rs-fg-dim);
   min-width: 40px;
   text-align: right;
 }
-.rbl-dmg-prob.rbl-dmg-seen { color: var(--rbl-known); }
+.rs-dmg-prob.rs-dmg-seen { color: var(--rs-known); }
 
 /* Immunity used to be a 50% wash — invisible on a washed-out screen and
    below AA. Now: the word "immune", an italic, a mark, and a dashed edge. */
-.rbl-row.rbl-immune .rbl-dmg-pct { color: var(--rbl-fg-dim); font-weight: 400; font-style: italic; }
-.rbl-row.rbl-immune .rbl-row-name { color: var(--rbl-fg-dim); }
-.rbl-row[data-state="immune"] { box-shadow: inset 2px 0 0 var(--rbl-edge); padding-left: 8px; }
+.rs-row.rs-immune .rs-dmg-pct { color: var(--rs-fg-dim); font-weight: 400; font-style: italic; }
+.rs-row.rs-immune .rs-row-name { color: var(--rs-fg-dim); }
+.rs-row[data-state="immune"] { box-shadow: inset 2px 0 0 var(--rs-edge); padding-left: 8px; }
 
-.rbl-quiet { color: var(--rbl-fg-faint); font-size: 11px; padding: 3px 5px; }
-.rbl-assumes {
+.rs-quiet { color: var(--rs-fg-faint); font-size: 11px; padding: 3px 5px; }
+.rs-assumes {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid var(--rbl-line);
-  color: var(--rbl-fg-faint);
+  border-top: 1px solid var(--rs-line);
+  color: var(--rs-fg-faint);
   font-size: 10px;
 }
 
 /* ---------------- body ---------------- */
 
-#rbl-body {
+#rs-body {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
   padding: 6px;
   scrollbar-width: thin;
-  scrollbar-color: var(--rbl-line) transparent;
+  scrollbar-color: var(--rs-line) transparent;
 }
-#rbl-body::-webkit-scrollbar { width: 8px; }
-#rbl-body::-webkit-scrollbar-thumb { background: var(--rbl-line); border-radius: 4px; }
+#rs-body::-webkit-scrollbar { width: 8px; }
+#rs-body::-webkit-scrollbar-thumb { background: var(--rs-line); border-radius: 4px; }
 
-#rbl-panel.rbl-collapsed #rbl-body,
-#rbl-panel.rbl-collapsed #rbl-foot { display: none; }
-#rbl-panel.rbl-collapsed { height: auto !important; resize: none; max-height: none; }
+#rs-panel.rs-collapsed #rs-body,
+#rs-panel.rs-collapsed #rs-foot { display: none; }
+#rs-panel.rs-collapsed { height: auto !important; resize: none; max-height: none; }
 
-.rbl-empty {
-  color: var(--rbl-fg-faint);
+.rs-empty {
+  color: var(--rs-fg-faint);
   text-align: center;
   padding: 22px 14px;
   line-height: 1.6;
 }
-.rbl-empty b { color: var(--rbl-fg-dim); display: block; margin-bottom: 4px; }
+.rs-empty b { color: var(--rs-fg-dim); display: block; margin-bottom: 4px; }
 
 /* ---------------- pokemon card ---------------- */
 
-.rbl-mon {
-  background: var(--rbl-bg-2);
-  border: 1px solid var(--rbl-line);
+.rs-mon {
+  background: var(--rs-bg-2);
+  border: 1px solid var(--rs-line);
   border-radius: 7px;
   margin-bottom: 5px;
   overflow: hidden;
 }
 /* "On the field" is an accent border; the 3px left edge says it again in a
    way that survives any colour deficiency. */
-.rbl-mon.rbl-active { border-color: var(--rbl-accent); border-left-width: 3px; }
+.rs-mon.rs-active { border-color: var(--rs-accent); border-left-width: 3px; }
 /* Fainted was a 45% wash on everything, which put the text far below AA.
    Now the sprite fades, the name drops to the dim token, and the header
    carries a literal "fainted" chip. */
-.rbl-mon.rbl-fainted .rbl-icon { opacity: .5; }
-.rbl-mon.rbl-fainted .rbl-name { color: var(--rbl-fg-dim); font-weight: 500; }
+.rs-mon.rs-fainted .rs-icon { opacity: .5; }
+.rs-mon.rs-fainted .rs-name { color: var(--rs-fg-dim); font-weight: 500; }
 
-.rbl-mon-head {
+.rs-mon-head {
   /* A real <button>, so the UA styling has to come off before the layout
      goes back on. */
   all: unset;
@@ -275,16 +275,16 @@
   color: inherit;
   text-align: left;
 }
-.rbl-mon-head:hover { background: var(--rbl-bg-3); }
+.rs-mon-head:hover { background: var(--rs-bg-3); }
 
-.rbl-icon {
+.rs-icon {
   width: 40px; height: 30px;
   flex: 0 0 auto;
   image-rendering: pixelated;
   background-repeat: no-repeat;
 }
 
-.rbl-name {
+.rs-name {
   font-weight: 600;
   font-size: 12px;
   flex: 1 1 auto;
@@ -292,28 +292,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* --dim rather than --faint: .rbl-lv also appears inside rows, on top of a bar. */
-.rbl-lv { color: var(--rbl-fg-dim); font-weight: 400; font-size: 10.5px; margin-left: 3px; }
+/* --dim rather than --faint: .rs-lv also appears inside rows, on top of a bar. */
+.rs-lv { color: var(--rs-fg-dim); font-weight: 400; font-size: 10.5px; margin-left: 3px; }
 
-.rbl-chip {
+.rs-chip {
   font-size: 9.5px;
   padding: 1px 5px;
   border-radius: 999px;
-  background: var(--rbl-bg-3);
-  color: var(--rbl-fg-dim);
+  background: var(--rs-bg-3);
+  color: var(--rs-fg-dim);
   white-space: nowrap;
   flex: 0 0 auto;
 }
-.rbl-chip.rbl-chip-known { background: rgba(74, 222, 128, .16); color: var(--rbl-known); }
-.rbl-chip.rbl-chip-tera { background: rgba(110, 168, 254, .18); color: var(--rbl-accent); }
-.rbl-chip.rbl-chip-status { background: rgba(251, 191, 36, .18); color: var(--rbl-warn); text-transform: uppercase; }
-.rbl-chip.rbl-chip-out {
+.rs-chip.rs-chip-known { background: rgba(74, 222, 128, .16); color: var(--rs-known); }
+.rs-chip.rs-chip-tera { background: rgba(110, 168, 254, .18); color: var(--rs-accent); }
+.rs-chip.rs-chip-status { background: rgba(251, 191, 36, .18); color: var(--rs-warn); text-transform: uppercase; }
+.rs-chip.rs-chip-out {
   background: transparent;
-  color: var(--rbl-fg-dim);
-  border: 1px dashed var(--rbl-edge);
+  color: var(--rs-fg-dim);
+  border: 1px dashed var(--rs-edge);
   padding: 0 4px;
 }
-.rbl-chip.rbl-chip-owner {
+.rs-chip.rs-chip-owner {
   max-width: 84px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -323,41 +323,41 @@
 /* The only bar with no number beside it, so it gets an aria-label from ui.js
    and a hatched pattern at the two danger thresholds — a bar that is only
    "the red one" says nothing to a colour-blind player. */
-.rbl-hp {
+.rs-hp {
   width: 100%; height: 4px;
-  background: var(--rbl-bg-3);
+  background: var(--rs-bg-3);
   overflow: hidden;
 }
-.rbl-hp > i { display: block; height: 100%; background: var(--rbl-known); transition: width .25s; }
-.rbl-hp.rbl-hp-mid > i {
-  background: var(--rbl-warn);
+.rs-hp > i { display: block; height: 100%; background: var(--rs-known); transition: width .25s; }
+.rs-hp.rs-hp-mid > i {
+  background: var(--rs-warn);
   background-image: repeating-linear-gradient(135deg,
-    transparent 0 7px, var(--rbl-bg-3) 7px 8px);
+    transparent 0 7px, var(--rs-bg-3) 7px 8px);
 }
-.rbl-hp.rbl-hp-low > i {
-  background: var(--rbl-danger);
+.rs-hp.rs-hp-low > i {
+  background: var(--rs-danger);
   background-image: repeating-linear-gradient(135deg,
-    transparent 0 2px, var(--rbl-bg-3) 2px 4px);
+    transparent 0 2px, var(--rs-bg-3) 2px 4px);
 }
 
-.rbl-mon-body { padding: 6px 8px 8px; border-top: 1px solid var(--rbl-line); }
-.rbl-mon:not(.rbl-open) .rbl-mon-body { display: none; }
+.rs-mon-body { padding: 6px 8px 8px; border-top: 1px solid var(--rs-line); }
+.rs-mon:not(.rs-open) .rs-mon-body { display: none; }
 
 /* ---------------- sections ---------------- */
 
-.rbl-sec { margin-top: 7px; }
-.rbl-sec:first-child { margin-top: 0; }
-.rbl-sec-t {
+.rs-sec { margin-top: 7px; }
+.rs-sec:first-child { margin-top: 0; }
+.rs-sec-t {
   font-size: 9.5px;
   text-transform: uppercase;
   letter-spacing: .7px;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
   margin-bottom: 3px;
   display: flex;
   justify-content: space-between;
 }
 
-.rbl-row {
+.rs-row {
   position: relative;
   display: flex;
   align-items: center;
@@ -367,262 +367,262 @@
   margin-bottom: 1px;
   overflow: hidden;
 }
-.rbl-row > .rbl-fill {
+.rs-row > .rs-fill {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   background: rgba(110, 168, 254, .16);
   border-radius: 3px;
   z-index: 0;
 }
-.rbl-row.rbl-rev > .rbl-fill { background: rgba(74, 222, 128, .2); }
+.rs-row.rs-rev > .rs-fill { background: rgba(74, 222, 128, .2); }
 /* A .35 wash left this text at roughly 1.5:1. The row is still visibly
    demoted — dim text, a faded bar — but it stays readable. */
-.rbl-row.rbl-dead > .rbl-fill { opacity: .4; }
-.rbl-row.rbl-dead .rbl-row-name,
-.rbl-row.rbl-dead .rbl-row-pct,
-.rbl-row.rbl-dead .rbl-dmg-pct,
-.rbl-row.rbl-dead .rbl-dmg-prob { color: var(--rbl-fg-dim); font-weight: 400; }
-.rbl-row > span { position: relative; z-index: 1; }
-.rbl-row::before { position: relative; z-index: 1; }
-.rbl-row-name { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rbl-row-pct {
+.rs-row.rs-dead > .rs-fill { opacity: .4; }
+.rs-row.rs-dead .rs-row-name,
+.rs-row.rs-dead .rs-row-pct,
+.rs-row.rs-dead .rs-dmg-pct,
+.rs-row.rs-dead .rs-dmg-prob { color: var(--rs-fg-dim); font-weight: 400; }
+.rs-row > span { position: relative; z-index: 1; }
+.rs-row::before { position: relative; z-index: 1; }
+.rs-row-name { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-row-pct {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
   font-size: 10.5px;
-  color: var(--rbl-fg-dim);
+  color: var(--rs-fg-dim);
 }
-.rbl-row.rbl-rev .rbl-row-name { color: var(--rbl-known); font-weight: 600; }
-.rbl-row.rbl-rev .rbl-row-pct { color: var(--rbl-known); }
-.rbl-row.rbl-sure .rbl-row-pct { color: var(--rbl-accent); }
+.rs-row.rs-rev .rs-row-name { color: var(--rs-known); font-weight: 600; }
+.rs-row.rs-rev .rs-row-pct { color: var(--rs-known); }
+.rs-row.rs-sure .rs-row-pct { color: var(--rs-accent); }
 
-.rbl-meta {
+.rs-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 10px;
   margin-top: 7px;
   padding-top: 6px;
-  border-top: 1px solid var(--rbl-line);
-  color: var(--rbl-fg-dim);
+  border-top: 1px solid var(--rs-line);
+  color: var(--rs-fg-dim);
   font-size: 10.5px;
 }
-.rbl-meta b { color: var(--rbl-fg); font-weight: 600; }
+.rs-meta b { color: var(--rs-fg); font-weight: 600; }
 
-.rbl-note {
+.rs-note {
   margin-top: 6px;
   padding: 4px 6px;
-  border-left: 2px solid var(--rbl-warn);
+  border-left: 2px solid var(--rs-warn);
   background: rgba(251, 191, 36, .08);
-  color: var(--rbl-warn);
+  color: var(--rs-warn);
   font-size: 10.5px;
   border-radius: 0 3px 3px 0;
 }
 
-.rbl-row.rbl-has-tip { cursor: help; }
-.rbl-row.rbl-has-tip:hover > .rbl-row-name,
-.rbl-row.rbl-has-tip:focus-visible > .rbl-row-name {
+.rs-row.rs-has-tip { cursor: help; }
+.rs-row.rs-has-tip:hover > .rs-row-name,
+.rs-row.rs-has-tip:focus-visible > .rs-row-name {
   text-decoration: underline dotted;
   text-underline-offset: 2px;
 }
 
 /* ---------------- tooltip ---------------- */
 
-#rbl-tip {
+#rs-tip {
   display: none;
   position: absolute;
   left: 8px;
   right: 8px;
   z-index: 5;
-  background: var(--rbl-bg-3);
-  border: 1px solid var(--rbl-line);
+  background: var(--rs-bg-3);
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
   padding: 6px 8px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
   pointer-events: none;
 }
-#rbl-panel.rbl-light #rbl-tip { box-shadow: 0 6px 18px rgba(20, 30, 50, .16); }
+#rs-panel.rs-light #rs-tip { box-shadow: 0 6px 18px rgba(20, 30, 50, .16); }
 
-.rbl-tip-t { font-weight: 650; font-size: 11.5px; color: var(--rbl-fg); }
-.rbl-tip-m {
+.rs-tip-t { font-weight: 650; font-size: 11.5px; color: var(--rs-fg); }
+.rs-tip-m {
   font-size: 10px;
-  color: var(--rbl-accent);
+  color: var(--rs-accent);
   margin-top: 1px;
   font-variant-numeric: tabular-nums;
 }
-.rbl-tip-d { font-size: 11px; color: var(--rbl-fg-dim); margin-top: 3px; line-height: 1.4; }
+.rs-tip-d { font-size: 11px; color: var(--rs-fg-dim); margin-top: 3px; line-height: 1.4; }
 
 /* ---------------- footer ---------------- */
 
-#rbl-foot {
+#rs-foot {
   flex: 0 0 auto;
   padding: 4px 8px;
-  border-top: 1px solid var(--rbl-line);
-  background: var(--rbl-bg-2);
-  color: var(--rbl-fg-faint);
+  border-top: 1px solid var(--rs-line);
+  background: var(--rs-bg-2);
+  color: var(--rs-fg-faint);
   font-size: 9.5px;
   display: flex;
   justify-content: space-between;
   gap: 8px;
 }
-#rbl-foot a { color: var(--rbl-fg-dim); text-decoration: none; }
-#rbl-foot a:hover { color: var(--rbl-accent); text-decoration: underline; }
+#rs-foot a { color: var(--rs-fg-dim); text-decoration: none; }
+#rs-foot a:hover { color: var(--rs-accent); text-decoration: underline; }
 
 /* ---------------- speed verdict ---------------- */
 
-.rbl-speed {
+.rs-speed {
   padding: 5px 7px 6px;
   margin-bottom: 7px;
-  background: var(--rbl-bg-2);
-  border: 1px solid var(--rbl-line);
+  background: var(--rs-bg-2);
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
 }
-.rbl-speed-v {
+.rs-speed-v {
   font-weight: 650;
   font-size: 11.5px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.rbl-speed-v.rbl-good { color: var(--rbl-known); }
-.rbl-speed-v.rbl-bad { color: var(--rbl-danger); }
-.rbl-speed-v.rbl-warn { color: var(--rbl-warn); }
-.rbl-speed-n {
+.rs-speed-v.rs-good { color: var(--rs-known); }
+.rs-speed-v.rs-bad { color: var(--rs-danger); }
+.rs-speed-v.rs-warn { color: var(--rs-warn); }
+.rs-speed-n {
   margin-top: 2px;
   font-size: 10.5px;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
   font-variant-numeric: tabular-nums;
 }
-.rbl-speed-n b { color: var(--rbl-fg); font-size: 11.5px; }
-.rbl-speed-s { margin-top: 3px; font-size: 10px; color: var(--rbl-warn); }
+.rs-speed-n b { color: var(--rs-fg); font-size: 11.5px; }
+.rs-speed-s { margin-top: 3px; font-size: 10px; color: var(--rs-warn); }
 
 /* ---------------- switch advisor ---------------- */
 
-.rbl-fill.rbl-fill-ko { background: rgba(248, 113, 113, .42); }
-.rbl-spd-mark { flex: 0 0 auto; font-size: 9px; color: var(--rbl-fg-dim); }
-.rbl-swing {
+.rs-fill.rs-fill-ko { background: rgba(248, 113, 113, .42); }
+.rs-spd-mark { flex: 0 0 auto; font-size: 9px; color: var(--rs-fg-dim); }
+.rs-swing {
   flex: 0 0 auto;
   font-size: 10px;
-  color: var(--rbl-warn);
+  color: var(--rs-warn);
   cursor: help;
   font-weight: 700;
 }
 
 /* ---------------- column labels & verdicts ---------------- */
 
-.rbl-cols {
+.rs-cols {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 0 5px 2px;
   font-size: 9px;
   letter-spacing: .3px;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
   text-transform: uppercase;
 }
-.rbl-col-name { flex: 1 1 auto; }
-.rbl-col-dmg { flex: 0 0 auto; min-width: 58px; text-align: right; }
-.rbl-col-prob { flex: 0 0 auto; min-width: 40px; text-align: right; }
+.rs-col-name { flex: 1 1 auto; }
+.rs-col-dmg { flex: 0 0 auto; min-width: 58px; text-align: right; }
+.rs-col-prob { flex: 0 0 auto; min-width: 40px; text-align: right; }
 
-.rbl-verdict {
+.rs-verdict {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 6px;
   margin-bottom: 4px;
   border-radius: 4px;
-  border-left: 3px solid var(--rbl-fg-faint);
-  background: var(--rbl-bg-2);
-  color: var(--rbl-fg-dim);
+  border-left: 3px solid var(--rs-fg-faint);
+  background: var(--rs-bg-2);
+  color: var(--rs-fg-dim);
 }
-.rbl-verdict.rbl-v-bad { border-left-color: var(--rbl-danger); color: var(--rbl-danger); }
-.rbl-verdict.rbl-v-good { border-left-color: var(--rbl-known); color: var(--rbl-known); }
+.rs-verdict.rs-v-bad { border-left-color: var(--rs-danger); color: var(--rs-danger); }
+.rs-verdict.rs-v-good { border-left-color: var(--rs-known); color: var(--rs-known); }
 
-.rbl-dmg-prob.rbl-dmg-ko { color: var(--rbl-accent); font-weight: 600; }
-.rbl-dmg-prob.rbl-ko-yes { color: var(--rbl-danger); font-weight: 700; }
-.rbl-dmg-prob.rbl-ko-no { color: var(--rbl-known); }
-.rbl-assumes > div { margin-top: 3px; }
+.rs-dmg-prob.rs-dmg-ko { color: var(--rs-accent); font-weight: 600; }
+.rs-dmg-prob.rs-ko-yes { color: var(--rs-danger); font-weight: 700; }
+.rs-dmg-prob.rs-ko-no { color: var(--rs-known); }
+.rs-assumes > div { margin-top: 3px; }
 
 /* ---------------- progressive disclosure ---------------- */
 
-.rbl-more {
+.rs-more {
   all: unset;
   display: block;
   margin-top: 3px;
   padding: 2px 5px;
   cursor: pointer;
   font-size: 10px;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
   border-radius: 3px;
 }
-.rbl-more:hover { color: var(--rbl-accent); background: var(--rbl-bg-3); }
+.rs-more:hover { color: var(--rs-accent); background: var(--rs-bg-3); }
 
-/* The middots were --rbl-line: about 1.4:1, i.e. text you cannot read. */
-.rbl-meta .rbl-sep { color: var(--rbl-fg-faint); margin: 0 1px; }
+/* The middots were --rs-line: about 1.4:1, i.e. text you cannot read. */
+.rs-meta .rs-sep { color: var(--rs-fg-faint); margin: 0 1px; }
 /* The separator belongs to the fact that follows it, so it wraps with that
    fact instead of stranding a middot at the end of a line. */
-.rbl-meta .rbl-fact:not(:first-child)::before {
+.rs-meta .rs-fact:not(:first-child)::before {
   content: '\00b7';
   margin-right: 8px;
-  color: var(--rbl-fg-faint);
+  color: var(--rs-fg-faint);
 }
-.rbl-fact.rbl-fact-seen { color: var(--rbl-known); }
-.rbl-fact.rbl-has-tip { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
+.rs-fact.rs-fact-seen { color: var(--rs-known); }
+.rs-fact.rs-has-tip { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
 
 /* One-line secondary attributes (item / ability / Tera / role). A ranking of
    three options is a sentence, not a chart — bars here only added height. */
-.rbl-line {
+.rs-line {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 5px;
   margin-top: 5px;
   font-size: 10.5px;
-  color: var(--rbl-fg-dim);
+  color: var(--rs-fg-dim);
   font-variant-numeric: tabular-nums;
 }
-.rbl-line b {
-  color: var(--rbl-fg-faint);
+.rs-line b {
+  color: var(--rs-fg-faint);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .04em;
   font-size: 9px;
   min-width: 36px;
 }
-.rbl-line .rbl-sep { color: var(--rbl-fg-faint); }
-.rbl-opt { color: var(--rbl-fg); }
-.rbl-opt.rbl-fact-seen { color: var(--rbl-known); font-weight: 600; }
-.rbl-opt.rbl-has-tip { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
+.rs-line .rs-sep { color: var(--rs-fg-faint); }
+.rs-opt { color: var(--rs-fg); }
+.rs-opt.rs-fact-seen { color: var(--rs-known); font-weight: 600; }
+.rs-opt.rs-has-tip { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
 
 /* Doubles pairing picker — which of the up-to-four matchups is on screen. */
-.rbl-pairs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
-.rbl-pair {
+.rs-pairs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.rs-pair {
   all: unset;
   box-sizing: border-box;
   padding: 3px 7px;
   /* --edge, not --line: this is the visible boundary of a control, so WCAG
      1.4.11 wants 3:1 against the surface behind it. */
-  border: 1px solid var(--rbl-edge);
+  border: 1px solid var(--rs-edge);
   border-radius: 4px;
   cursor: pointer;
   font-size: 10px;
-  color: var(--rbl-fg-dim);
-  background: var(--rbl-bg-2);
+  color: var(--rs-fg-dim);
+  background: var(--rs-bg-2);
 }
-.rbl-pair:hover { color: var(--rbl-fg); border-color: var(--rbl-fg); }
-.rbl-pair-on {
-  color: var(--rbl-accent);
-  border-color: var(--rbl-accent);
+.rs-pair:hover { color: var(--rs-fg); border-color: var(--rs-fg); }
+.rs-pair-on {
+  color: var(--rs-accent);
+  border-color: var(--rs-accent);
   border-width: 2px;
   padding: 2px 6px;
-  background: var(--rbl-bg-3);
+  background: var(--rs-bg-3);
   font-weight: 700;
 }
 
 /* A Choice lock is a hard constraint, so it sits above the move list. */
-.rbl-lock {
+.rs-lock {
   margin: 6px 0 2px;
   padding: 3px 6px;
-  border-left: 2px solid var(--rbl-accent);
-  background: var(--rbl-bg-3);
-  color: var(--rbl-fg);
+  border-left: 2px solid var(--rs-accent);
+  background: var(--rs-bg-3);
+  color: var(--rs-fg);
   font-size: 10.5px;
   border-radius: 0 3px 3px 0;
 }
@@ -632,21 +632,21 @@
    sit on top of them only cost contrast. */
 /* Strike the move, not the "no PP" note explaining why — text-decoration
    propagates to descendants and cannot be cancelled further down. */
-.rbl-row.rbl-spent .rbl-mv { text-decoration: line-through; }
-.rbl-row.rbl-spent > .rbl-fill { opacity: .25; }
+.rs-row.rs-spent .rs-mv { text-decoration: line-through; }
+.rs-row.rs-spent > .rs-fill { opacity: .25; }
 
 /* A slot that gets knocked out: red bar, red word — plus a hatched bar and a
    solid inset edge, neither of which depends on seeing the red. */
-.rbl-row[data-state="ko"] { box-shadow: inset 2px 0 0 var(--rbl-danger); padding-left: 8px; }
-.rbl-fill.rbl-fill-ko {
+.rs-row[data-state="ko"] { box-shadow: inset 2px 0 0 var(--rs-danger); padding-left: 8px; }
+.rs-fill.rs-fill-ko {
   background-image: repeating-linear-gradient(135deg,
-    transparent 0 4px, var(--rbl-bg-2) 4px 7px);
+    transparent 0 4px, var(--rs-bg-2) 4px 7px);
 }
 
 /* ---------------- motion & forced contrast ---------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  #rbl-panel, #rbl-panel * {
+  #rs-panel, #rs-panel * {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
@@ -655,9 +655,9 @@
 
 /* Where the design leans on a hairline, make it a line. */
 @media (prefers-contrast: more) {
-  #rbl-panel { --rbl-line: var(--rbl-edge); }
-  #rbl-panel .rbl-row > .rbl-fill { outline: 1px solid var(--rbl-edge); outline-offset: -1px; }
-  #rbl-panel .rbl-tab.rbl-tab-on { border-bottom-width: 3px; }
-  #rbl-panel .rbl-chip { border: 1px solid var(--rbl-edge); }
-  #rbl-panel :focus-visible { outline-width: 3px; }
+  #rs-panel { --rs-line: var(--rs-edge); }
+  #rs-panel .rs-row > .rs-fill { outline: 1px solid var(--rs-edge); outline-offset: -1px; }
+  #rs-panel .rs-tab.rs-tab-on { border-bottom-width: 3px; }
+  #rs-panel .rs-chip { border: 1px solid var(--rs-edge); }
+  #rs-panel :focus-visible { outline-width: 3px; }
 }

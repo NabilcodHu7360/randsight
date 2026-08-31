@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Randbats Live — harness</title>
+<title>Randsight — harness</title>
 <link rel="stylesheet" href="../src/overlay.css">
 <style>
   body { margin:0; min-height:100vh; background:#0e1116;
@@ -46,13 +46,13 @@ const RQ = {
 // Passive recorder: what the page bridge actually posted, so a test can ask
 // which reader produced each tick. It only listens — nothing here feeds back
 // into inject.js or content.js, and nothing else in the page reads it.
-window.__rblBridge = [];
+window.__rsBridge = [];
 window.addEventListener('message', function (ev) {
-  if (ev.source !== window || !ev.data || ev.data.__rbl !== '__randbats_live__') return;
+  if (ev.source !== window || !ev.data || ev.data.__rs !== '__randsight__') return;
   if (ev.data.type === 'battles') {
     var rooms = ev.data.payload || [];
     var first = rooms[0] || {};
-    window.__rblBridge.push({
+    window.__rsBridge.push({
       type: 'battles',
       sources: rooms.map(function (p) { return p.source; }),
       turns: rooms.map(function (p) { return p.turn; }),
@@ -60,9 +60,9 @@ window.addEventListener('message', function (ev) {
       spectating: first.myActive ? !!first.myActive.spectating : null
     });
   } else if (ev.data.type === 'stalled') {
-    window.__rblBridge.push({ type: 'stalled', error: (ev.data.payload || {}).error || '' });
+    window.__rsBridge.push({ type: 'stalled', error: (ev.data.payload || {}).error || '' });
   }
-  if (window.__rblBridge.length > 200) window.__rblBridge.splice(0, 100);
+  if (window.__rsBridge.length > 200) window.__rsBridge.splice(0, 100);
 });
 
 // Must be installed BEFORE inject.js runs, or its constructor Proxy has
@@ -290,7 +290,7 @@ if (!RQ.noclient) window.app = { rooms: { [battle.id]: roomObj }, curRoom: roomO
 const store = {};
 // A panel position saved on a much larger monitor. Seeded before content.js
 // reads storage, exactly as a real profile would have it.
-if (RQ.pos === 'off') store.rblUi = { pos: { left: '5200px', top: '4100px' } };
+if (RQ.pos === 'off') store.rsUi = { pos: { left: '5200px', top: '4100px' } };
 
 // How many getSets replies still have to fail before the real data is served.
 let setsFailsLeft = RQ.setsfail;
@@ -361,151 +361,151 @@ window.chrome = {
 <script>
 // Expose a hook so Playwright can assert on what actually rendered.
 window.__harness = {
-  ready() { return !!document.querySelector('#rbl-panel .rbl-mon'); },
+  ready() { return !!document.querySelector('#rs-panel .rs-mon'); },
   dump() {
-    return [...document.querySelectorAll('#rbl-panel .rbl-mon')].map(card => ({
-      name: card.querySelector('.rbl-name')?.firstChild?.textContent?.trim(),
-      chips: [...card.querySelectorAll('.rbl-chip')].map(c => c.textContent),
-      open: card.classList.contains('rbl-open'),
-      sections: [...card.querySelectorAll('.rbl-sec')].map(s => ({
-        title: s.querySelector('.rbl-sec-t span')?.textContent,
-        rows: [...s.querySelectorAll('.rbl-row')].map(r => ({
-          name: r.querySelector('.rbl-row-name').textContent,
-          pct: r.querySelector('.rbl-row-pct').textContent,
-          revealed: r.classList.contains('rbl-rev')
+    return [...document.querySelectorAll('#rs-panel .rs-mon')].map(card => ({
+      name: card.querySelector('.rs-name')?.firstChild?.textContent?.trim(),
+      chips: [...card.querySelectorAll('.rs-chip')].map(c => c.textContent),
+      open: card.classList.contains('rs-open'),
+      sections: [...card.querySelectorAll('.rs-sec')].map(s => ({
+        title: s.querySelector('.rs-sec-t span')?.textContent,
+        rows: [...s.querySelectorAll('.rs-row')].map(r => ({
+          name: r.querySelector('.rs-row-name').textContent,
+          pct: r.querySelector('.rs-row-pct').textContent,
+          revealed: r.classList.contains('rs-rev')
         }))
       })),
-      meta: [...card.querySelectorAll('.rbl-meta span')].map(m => m.textContent),
-      facts: [...card.querySelectorAll('.rbl-meta .rbl-fact')].map(f => ({
-        name: f.textContent, revealed: f.classList.contains('rbl-fact-seen')
+      meta: [...card.querySelectorAll('.rs-meta span')].map(m => m.textContent),
+      facts: [...card.querySelectorAll('.rs-meta .rs-fact')].map(f => ({
+        name: f.textContent, revealed: f.classList.contains('rs-fact-seen')
       })),
-      notes: [...card.querySelectorAll('.rbl-note')].map(n => n.textContent)
+      notes: [...card.querySelectorAll('.rs-note')].map(n => n.textContent)
     }));
   },
-  subtitle() { return document.getElementById('rbl-sub')?.textContent; },
-  tabs() { return [...document.querySelectorAll('#rbl-tabs .rbl-tab')].map(b => b.textContent); },
-  activeTab() { return document.querySelector('#rbl-tabs .rbl-tab.rbl-tab-on')?.textContent; },
+  subtitle() { return document.getElementById('rs-sub')?.textContent; },
+  tabs() { return [...document.querySelectorAll('#rs-tabs .rs-tab')].map(b => b.textContent); },
+  activeTab() { return document.querySelector('#rs-tabs .rs-tab.rs-tab-on')?.textContent; },
   showTab(label) {
-    const b = [...document.querySelectorAll('#rbl-tabs .rbl-tab')].find(x => x.textContent === label);
+    const b = [...document.querySelectorAll('#rs-tabs .rs-tab')].find(x => x.textContent === label);
     if (b) b.click();
   },
   speed() {
-    const b = document.querySelector('#rbl-body .rbl-speed');
+    const b = document.querySelector('#rs-body .rs-speed');
     if (!b) return null;
     return {
-      verdict: b.querySelector('.rbl-speed-v')?.textContent,
-      cls: b.querySelector('.rbl-speed-v')?.className,
-      numbers: b.querySelector('.rbl-speed-n')?.textContent,
-      scarfNote: b.querySelector('.rbl-speed-s')?.textContent || null
+      verdict: b.querySelector('.rs-speed-v')?.textContent,
+      cls: b.querySelector('.rs-speed-v')?.className,
+      numbers: b.querySelector('.rs-speed-n')?.textContent,
+      scarfNote: b.querySelector('.rs-speed-s')?.textContent || null
     };
   },
   switches() {
-    return [...document.querySelectorAll('#rbl-body .rbl-sec .rbl-row')].map(r => ({
-      species: r.querySelector('.rbl-row-name').textContent.replace(/ · in now$/, ''),
-      active: / · in now$/.test(r.querySelector('.rbl-row-name').textContent),
-      dmg: r.querySelector('.rbl-dmg-pct')?.textContent,
-      survives: r.querySelector('.rbl-dmg-prob')?.textContent,
-      speed: r.querySelector('.rbl-spd-mark')?.textContent || null,
+    return [...document.querySelectorAll('#rs-body .rs-sec .rs-row')].map(r => ({
+      species: r.querySelector('.rs-row-name').textContent.replace(/ · in now$/, ''),
+      active: / · in now$/.test(r.querySelector('.rs-row-name').textContent),
+      dmg: r.querySelector('.rs-dmg-pct')?.textContent,
+      survives: r.querySelector('.rs-dmg-prob')?.textContent,
+      speed: r.querySelector('.rs-spd-mark')?.textContent || null,
       title: r.title || ''
     }));
   },
   verdicts() {
-    const vs = [...document.querySelectorAll('#rbl-body .rbl-verdict')].map(v => v.textContent);
+    const vs = [...document.querySelectorAll('#rs-body .rs-verdict')].map(v => v.textContent);
     return { incoming: vs[0], outgoing: vs[1], all: vs };
   },
   colLabels() {
-    return [...document.querySelectorAll('#rbl-body .rbl-cols')]
+    return [...document.querySelectorAll('#rs-body .rs-cols')]
       .map(c => [...c.children].map(x => x.textContent));
   },
   swings() {
-    return [...document.querySelectorAll('#rbl-body .rbl-swing')].map(s => s.title);
+    return [...document.querySelectorAll('#rs-body .rs-swing')].map(s => s.title);
   },
   cardFacts(name) {
-    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+      .find(c => c.querySelector('.rs-name').textContent.includes(name));
     if (!card) return null;
-    return [...card.querySelectorAll('.rbl-meta .rbl-fact')].map(f => f.textContent);
+    return [...card.querySelectorAll('.rs-meta .rs-fact')].map(f => f.textContent);
   },
   cardRowCount(name) {
-    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
+    const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+      .find(c => c.querySelector('.rs-name').textContent.includes(name));
     if (!card) return 0;
-    return [...card.querySelectorAll('.rbl-row')].filter(r => !r.closest('[hidden]')).length;
+    return [...card.querySelectorAll('.rs-row')].filter(r => !r.closest('[hidden]')).length;
   },
   moreButton(name) {
-    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
-    const b = card && card.querySelector('.rbl-more');
+    const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+      .find(c => c.querySelector('.rs-name').textContent.includes(name));
+    const b = card && card.querySelector('.rs-more');
     return b ? b.textContent : null;
   },
   clickMore(name) {
-    const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-      .find(c => c.querySelector('.rbl-name').textContent.includes(name));
-    const b = card && card.querySelector('.rbl-more');
+    const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+      .find(c => c.querySelector('.rs-name').textContent.includes(name));
+    const b = card && card.querySelector('.rs-more');
     if (b) b.click();
   },
   damage() {
-    const secs = [...document.querySelectorAll('#rbl-body .rbl-sec')].map(s => ({
-      title: s.querySelector('.rbl-sec-t span')?.textContent,
-      rows: [...s.querySelectorAll('.rbl-row')].map(r => ({
-        move: r.querySelector('.rbl-row-name').textContent,
-        dmg: r.querySelector('.rbl-dmg-pct')?.textContent,
-        prob: r.querySelector('.rbl-dmg-prob')?.textContent,
+    const secs = [...document.querySelectorAll('#rs-body .rs-sec')].map(s => ({
+      title: s.querySelector('.rs-sec-t span')?.textContent,
+      rows: [...s.querySelectorAll('.rs-row')].map(r => ({
+        move: r.querySelector('.rs-row-name').textContent,
+        dmg: r.querySelector('.rs-dmg-pct')?.textContent,
+        prob: r.querySelector('.rs-dmg-prob')?.textContent,
         ko: r.title || ''
       }))
     }));
     return {
-      matchup: document.querySelector('#rbl-body .rbl-matchup')?.textContent,
-      notes: [...document.querySelectorAll('#rbl-body .rbl-assumes div')].map(d => d.textContent),
-      assumes: [...document.querySelectorAll('#rbl-body .rbl-assumes div')]
+      matchup: document.querySelector('#rs-body .rs-matchup')?.textContent,
+      notes: [...document.querySelectorAll('#rs-body .rs-assumes div')].map(d => d.textContent),
+      assumes: [...document.querySelectorAll('#rs-body .rs-assumes div')]
         .map(d => d.textContent).filter(t => /Assumes|item is unknown/.test(t)).join(' '),
-      warning: document.querySelector('#rbl-body .rbl-note')?.textContent || null,
-      empty: document.querySelector('#rbl-body .rbl-empty b')?.textContent || null,
+      warning: document.querySelector('#rs-body .rs-note')?.textContent || null,
+      empty: document.querySelector('#rs-body .rs-empty b')?.textContent || null,
       sections: secs
     };
   },
   tipRows() {
-    return [...document.querySelectorAll('#rbl-panel .rbl-row.rbl-has-tip')]
-      .map(r => r.querySelector('.rbl-row-name').textContent)
-      .concat([...document.querySelectorAll('#rbl-panel .rbl-fact.rbl-has-tip')].map(f => f.textContent))
-      .concat([...document.querySelectorAll('#rbl-panel .rbl-opt.rbl-has-tip')].map(f => f.textContent));
+    return [...document.querySelectorAll('#rs-panel .rs-row.rs-has-tip')]
+      .map(r => r.querySelector('.rs-row-name').textContent)
+      .concat([...document.querySelectorAll('#rs-panel .rs-fact.rs-has-tip')].map(f => f.textContent))
+      .concat([...document.querySelectorAll('#rs-panel .rs-opt.rs-has-tip')].map(f => f.textContent));
   },
   hover(rowName) {
-    const row = [...document.querySelectorAll('#rbl-panel .rbl-row')]
-      .find(r => r.querySelector('.rbl-row-name').textContent === rowName)
-      || [...document.querySelectorAll('#rbl-panel .rbl-fact')]
+    const row = [...document.querySelectorAll('#rs-panel .rs-row')]
+      .find(r => r.querySelector('.rs-row-name').textContent === rowName)
+      || [...document.querySelectorAll('#rs-panel .rs-fact')]
       .find(f => f.textContent === rowName)
       // one-line attributes read "Leftovers 62%", so match on the leading name
-      || [...document.querySelectorAll('#rbl-panel .rbl-opt')]
+      || [...document.querySelectorAll('#rs-panel .rs-opt')]
       .find(f => f.textContent.replace(/ [\d.]+%$| <0\.1%$/, '') === rowName);
     if (!row) return null;
     // A row with no dex entry gets no listener at all, so report that directly
     // rather than reading whatever the last hover left on screen.
-    if (!row.classList.contains('rbl-has-tip')) return null;
+    if (!row.classList.contains('rs-has-tip')) return null;
     row.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false }));
-    const t = document.getElementById('rbl-tip');
+    const t = document.getElementById('rs-tip');
     if (!t || t.style.display === 'none') return null;
     return {
-      title: t.querySelector('.rbl-tip-t')?.textContent,
-      meta: t.querySelector('.rbl-tip-m')?.textContent || '',
-      desc: t.querySelector('.rbl-tip-d')?.textContent,
-      inPanel: document.getElementById('rbl-panel').contains(t)
+      title: t.querySelector('.rs-tip-t')?.textContent,
+      meta: t.querySelector('.rs-tip-m')?.textContent || '',
+      desc: t.querySelector('.rs-tip-d')?.textContent,
+      inPanel: document.getElementById('rs-panel').contains(t)
     };
   },
-  foot() { return document.getElementById('rbl-foot')?.textContent; },
+  foot() { return document.getElementById('rs-foot')?.textContent; },
 
   // ---- regression helpers (test/regress.test.js) -------------------------
   /** Everything the panel currently says, as one string. */
-  text() { return document.getElementById('rbl-panel')?.textContent || ''; },
+  text() { return document.getElementById('rs-panel')?.textContent || ''; },
   /** The "no battle / something went wrong" placeholder, if one is showing. */
   notice() {
-    const e = document.querySelector('#rbl-body .rbl-empty');
+    const e = document.querySelector('#rs-body .rs-empty');
     if (!e) return null;
     return { title: e.querySelector('b')?.textContent || '', text: e.textContent || '' };
   },
   /** Panel geometry against the viewport, for the saved-position clamp. */
   rect() {
-    const p = document.getElementById('rbl-panel');
+    const p = document.getElementById('rs-panel');
     if (!p) return null;
     const r = p.getBoundingClientRect();
     return { left: r.left, top: r.top, right: r.right, bottom: r.bottom,
@@ -514,11 +514,11 @@ window.__harness = {
   },
   /** Every move name the body is currently showing, from any tab. */
   bodyMoveNames() {
-    return [...document.querySelectorAll('#rbl-body .rbl-row .rbl-row-name')]
+    return [...document.querySelectorAll('#rs-body .rs-row .rs-row-name')]
       .map(n => n.textContent.trim());
   },
   /** What the bridge has posted, newest last. See the recorder below. */
-  bridgeLog() { return window.__rblBridge.slice(); },
+  bridgeLog() { return window.__rsBridge.slice(); },
   turn() { return battle.turn; },
   /** Advance the battle, which is what makes the bridge post again. */
   bumpTurn(n) { battle.turn += (n || 1); return battle.turn; },
@@ -546,18 +546,18 @@ window.__harness = {
    * played back through chrome.storage the way the real popup reaches the page.
    */
   resetPanelPosition() {
-    const prev = store.rblUi || {};
+    const prev = store.rsUi || {};
     const next = Object.assign({}, prev, { pos: null, size: null, collapsed: false });
-    store.rblUi = next;
+    store.rsUi = next;
     chrome.storage.onChanged._fns.forEach(fn =>
-      fn({ rblUi: { oldValue: prev, newValue: next } }, 'local'));
+      fn({ rsUi: { oldValue: prev, newValue: next } }, 'local'));
   },
 
   openAll() {
-    document.querySelectorAll('#rbl-panel .rbl-mon:not(.rbl-open) .rbl-mon-head')
+    document.querySelectorAll('#rs-panel .rs-mon:not(.rs-open) .rs-mon-head')
       .forEach(h => h.click());
   },
-  setLight(on) { document.getElementById('rbl-panel').classList.toggle('rbl-light', on); }
+  setLight(on) { document.getElementById('rs-panel').classList.toggle('rs-light', on); }
 };
 // The client opens its socket after boot; inject.js has already proxied the
 // constructor, so this is what the protocol reader ends up tapping.

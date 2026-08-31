@@ -127,11 +127,11 @@ const server = http.createServer((req, res) => {
     ok(c.chips.some(x => /BRN/i.test(x)), 'status chip rendered');
     ok(sec(c, 'Moves').title === 'Moves', 'moves section present');
     const label = await page.evaluate(() => {
-      const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-        .find(x => /Kingambit/.test(x.querySelector('.rbl-name').textContent));
-      const s = [...card.querySelectorAll('.rbl-sec')]
-        .find(x => x.querySelector('.rbl-sec-t span').textContent === 'Moves');
-      return s.querySelectorAll('.rbl-sec-t span')[1].textContent;
+      const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+        .find(x => /Kingambit/.test(x.querySelector('.rs-name').textContent));
+      const s = [...card.querySelectorAll('.rs-sec')]
+        .find(x => x.querySelector('.rs-sec-t span').textContent === 'Moves');
+      return s.querySelectorAll('.rs-sec-t span')[1].textContent;
     });
     ok(label === 'set is fixed', `header reads "${label}", not "4 unknown"`);
   }
@@ -163,8 +163,8 @@ const server = http.createServer((req, res) => {
       'no card spends a bar section on a Tera type it already knows');
 
     // Secondary attributes are one line each now, not a section of bars.
-    const lines = await page.evaluate(() => [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-      .map(c => [...c.querySelectorAll('.rbl-line')].map(l => l.textContent)));
+    const lines = await page.evaluate(() => [...document.querySelectorAll('#rs-panel .rs-mon')]
+      .map(c => [...c.querySelectorAll('.rs-line')].map(l => l.textContent)));
     ok(lines.some(l => l.length), 'uncertain item/ability/Tera render as compact lines');
     ok(Object.values(by).every(c => !sec(c, 'Item') && !sec(c, 'Ability')),
       'no card spends a bar section on an item or ability');
@@ -174,17 +174,17 @@ const server = http.createServer((req, res) => {
       'a 29% move is still shown up front, not hidden as a long tail');
 
     const hidden = await page.evaluate(() => {
-      const card = [...document.querySelectorAll('#rbl-panel .rbl-mon')]
-        .find(c => c.querySelector('.rbl-more'));
+      const card = [...document.querySelectorAll('#rs-panel .rs-mon')]
+        .find(c => c.querySelector('.rs-more'));
       if (!card) return 'none';
-      const name = card.querySelector('.rbl-name').firstChild.textContent.trim();
-      const vis = () => [...card.querySelectorAll('.rbl-row')]
+      const name = card.querySelector('.rs-name').firstChild.textContent.trim();
+      const vis = () => [...card.querySelectorAll('.rs-row')]
         .filter(r => !r.closest('[hidden]')).length;
       const before = vis();
-      card.querySelector('.rbl-more').click();
-      const after = [...card.querySelectorAll('.rbl-row')]
+      card.querySelector('.rs-more').click();
+      const after = [...card.querySelectorAll('.rs-row')]
         .filter(r => !r.closest('[hidden]')).length;
-      const label = card.querySelector('.rbl-more').textContent;
+      const label = card.querySelector('.rs-more').textContent;
       return { name, before, after, label };
     });
     if (hidden === 'none') {
@@ -235,11 +235,11 @@ const server = http.createServer((req, res) => {
     await page2.evaluate(() => window.__harness.openAll());
 
     // Their side has already Terastallized, so nobody else on it can.
-    const facts = await page2.evaluate(() => [...document.querySelectorAll('#rbl-panel .rbl-mon')]
+    const facts = await page2.evaluate(() => [...document.querySelectorAll('#rs-panel .rs-mon')]
       .map(c => ({
-        name: c.querySelector('.rbl-name').firstChild.textContent.trim(),
-        facts: [...c.querySelectorAll('.rbl-fact')].map(f => f.textContent),
-        tera: [...c.querySelectorAll('.rbl-line')].some(l => /^TERA/i.test(l.textContent))
+        name: c.querySelector('.rs-name').firstChild.textContent.trim(),
+        facts: [...c.querySelectorAll('.rs-fact')].map(f => f.textContent),
+        tera: [...c.querySelectorAll('.rs-line')].some(l => /^TERA/i.test(l.textContent))
       })));
     const others = facts.filter(f => f.name !== 'Gholdengo');
     ok(others.every(f => f.facts.some(x => /no Tera left/.test(x))),
@@ -250,17 +250,17 @@ const server = http.createServer((req, res) => {
       'the Pokemon that actually Terastallized is not told it has none left');
 
     // A move with no PP left cannot happen, whatever the posterior says.
-    const spent = await page2.evaluate(() => [...document.querySelectorAll('#rbl-panel .rbl-row.rbl-spent')]
-      .map(r => r.querySelector('.rbl-row-name').textContent));
+    const spent = await page2.evaluate(() => [...document.querySelectorAll('#rs-panel .rs-row.rs-spent')]
+      .map(r => r.querySelector('.rs-row-name').textContent));
     ok(spent.some(x => /Hex/.test(x) && /no PP/.test(x)),
       `a move used to its PP limit is struck through and labelled (${spent.join(', ') || 'none'})`);
 
     // The lock appears only once they have actually committed to a move.
-    const before = await page2.evaluate(() => !!document.querySelector('#rbl-panel .rbl-lock'));
+    const before = await page2.evaluate(() => !!document.querySelector('#rs-panel .rs-lock'));
     ok(!before, 'no lock is claimed on the first sighting — the bridge has no baseline yet');
     await page2.waitForTimeout(2200);
     const lock = await page2.evaluate(() =>
-      document.querySelector('#rbl-panel .rbl-lock')?.textContent || null);
+      document.querySelector('#rs-panel .rs-lock')?.textContent || null);
     ok(lock && /Locked into Make It Rain/.test(lock),
       `once they commit, the Choice lock is stated: "${lock}"`);
     ok(lock && !/if Choice/.test(lock),
@@ -275,9 +275,9 @@ const server = http.createServer((req, res) => {
       `fainted Pokemon sorts last (${cards[cards.length - 1].name})`);
   }
 
-  const panel = page.locator('#rbl-panel');
+  const panel = page.locator('#rs-panel');
   await page.evaluate(() => {
-    const p = document.getElementById('rbl-panel');
+    const p = document.getElementById('rs-panel');
     p.style.height = 'auto'; p.style.maxHeight = 'none';
   });
   await panel.screenshot({ path: path.join(ROOT, 'test', 'shot-dark.png') });

@@ -1,5 +1,5 @@
 /*
- * Randbats Live — tactical derivations.
+ * Randsight — tactical derivations.
  *
  * Two questions a player asks every single turn, neither of which the raw
  * numbers answer directly:
@@ -41,9 +41,9 @@
     var ev = (evs && typeof evs.spe === 'number') ? evs.spe : DEFAULT_EV;
     var iv = (ivs && typeof ivs.spe === 'number') ? ivs.spe : DEFAULT_IV;
 
-    if (species && root.RBLCalcLib) {
+    if (species && root.RSCalcLib) {
       try {
-        var lib = root.RBLCalcLib;
+        var lib = root.RSCalcLib;
         var g = lib.Generations.get(gen || 9);
         var pk = new lib.Pokemon(g, species, {
           level: level,
@@ -183,13 +183,13 @@
    * discounted by how likely they actually have it.
    *
    * @param o.team    our full team from the bridge
-   * @param o.damage  the RBLDamage module
+   * @param o.damage  the RSDamage module
    */
   function switches(o) {
     var D = o && o.damage;
     if (!D || !D.ready() || !o.team || !o.team.length || !o.foeVM || !o.foeRaw) return null;
 
-    var lib = root.RBLCalcLib;
+    var lib = root.RSCalcLib;
     var gen;
     try { gen = lib.Generations.get(o.gen || 9); } catch (e) { return null; }
     var fieldParts = D.buildField(gen, o.field, o.gameType);
@@ -332,7 +332,7 @@
     };
   }
 
-  root.RBLAdvice = {
+  root.RSAdvice = {
     speed: speed,
     switches: switches,
     effectiveSpeed: effectiveSpeed,

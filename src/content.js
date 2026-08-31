@@ -1,5 +1,5 @@
 /*
- * Randbats Live — content script (isolated world).
+ * Randsight — content script (isolated world).
  *
  * Glue: takes battle state from the page bridge, pulls the matching randbats
  * set data from the service worker, runs the inference engine, and hands a
@@ -8,10 +8,10 @@
 (function () {
   'use strict';
 
-  var TAG = '__randbats_live__';
-  var E = globalThis.RBLEngine;
-  var F = globalThis.RBLFormats;
-  var UI = globalThis.RBLUI;
+  var TAG = '__randsight__';
+  var E = globalThis.RSEngine;
+  var F = globalThis.RSFormats;
+  var UI = globalThis.RSUI;
 
   var settings = { enabled: true, side: 'far', refreshedAt: 0 };
   var latest = { rooms: [], at: 0 };
@@ -32,7 +32,7 @@
 
   function ensureJoint(file) {
     if (jointState[file]) return;
-    if (!globalThis.RBLJoint || !chrome.runtime || typeof chrome.runtime.getURL !== 'function') {
+    if (!globalThis.RSJoint || !chrome.runtime || typeof chrome.runtime.getURL !== 'function') {
       jointState[file] = 'none';
       return;
     }
@@ -42,7 +42,7 @@
       if (!r.ok) throw new Error('no table');
       return r.json();
     }).then(function (table) {
-      jointState[file] = globalThis.RBLJoint.register(file, table) ? 'ready' : 'none';
+      jointState[file] = globalThis.RSJoint.register(file, table) ? 'ready' : 'none';
       lastRenderKey = '';
       rerender();
     }).catch(function () {
@@ -60,12 +60,12 @@
   // settings
   // -------------------------------------------------------------------
 
-  chrome.storage.local.get(['rblSettings', 'rblUi'], function (got) {
-    if (got.rblSettings) settings = Object.assign(settings, got.rblSettings);
-    UI.applyState(got.rblUi || null);
+  chrome.storage.local.get(['rsSettings', 'rsUi'], function (got) {
+    if (got.rsSettings) settings = Object.assign(settings, got.rsSettings);
+    UI.applyState(got.rsUi || null);
     UI.setVisible(settings.enabled !== false);
     UI.onPersist(function (st) {
-      chrome.storage.local.set({ rblUi: st });
+      chrome.storage.local.set({ rsUi: st });
       // Some UI state changes what has to be COMPUTED, not just what is drawn —
       // picking a different doubles pairing means a whole new calc. Drop the
       // memo so the next render actually redoes the work.
@@ -79,13 +79,13 @@
     if (area !== 'local') return;
     // The popup can reset the panel's saved geometry — apply it live rather
     // than making the user reload the page they're mid-battle on.
-    if (changes.rblUi) {
-      UI.applyState(changes.rblUi.newValue || {});
+    if (changes.rsUi) {
+      UI.applyState(changes.rsUi.newValue || {});
       lastRenderKey = '';
       rerender();
     }
-    if (!changes.rblSettings) return;
-    var next = changes.rblSettings.newValue || {};
+    if (!changes.rsSettings) return;
+    var next = changes.rsSettings.newValue || {};
     // The popup's "Refresh now" bumps refreshedAt after clearing the service
     // worker's cache; drop our in-page copies so the next render refetches.
     if ((next.refreshedAt || 0) > (settings.refreshedAt || 0)) {
@@ -123,7 +123,7 @@
     // was reloaded. Back off instead, and let the next tick try again.
     if (lastFetchError[file] && Date.now() - lastFetchError[file].at < FETCH_RETRY_MS) return null;
     pending[file] = true;
-    chrome.runtime.sendMessage({ __rbl: true, type: 'getSets', format: format }, function (res) {
+    chrome.runtime.sendMessage({ __rs: true, type: 'getSets', format: format }, function (res) {
       delete pending[file];
       if (chrome.runtime.lastError || !res) {
         lastFetchError[file] = {
@@ -178,7 +178,7 @@
 
   function requestDescs(wanted) {
     if (!wanted.items.length && !wanted.abilities.length && !wanted.moves.length) return;
-    window.postMessage({ __rbl: TAG, type: 'describe', payload: wanted }, window.location.origin);
+    window.postMessage({ __rs: TAG, type: 'describe', payload: wanted }, window.location.origin);
   }
 
   // Items that lock the holder into the move it just used.
@@ -232,7 +232,7 @@
     var model = getModel(file, found.key, found.entry);
     var pred = E.predict(model, obs);
 
-    var J = globalThis.RBLJoint;
+    var J = globalThis.RSJoint;
     if (J && J.has(file)) {
       var joint = J.predict(file, p.species, obs, found.entry);
       if (joint) pred = J.blend(joint, pred);
@@ -336,7 +336,7 @@
     return {
       subtitle: subtitle || '', mons: [], damage: null,
       emptyTitle: title, emptyBody: bodyText,
-      footLeft: 'randbats-live', footRight: ''
+      footLeft: 'randsight', footRight: ''
     };
   }
 
@@ -417,7 +417,7 @@
    * one is on screen is the user's choice, never an unstated default.
    */
   function buildDamage(room, cards, gen, pick) {
-    if (!globalThis.RBLDamage || !globalThis.RBLDamage.ready()) {
+    if (!globalThis.RSDamage || !globalThis.RSDamage.ready()) {
       return { available: false, reason: 'Damage library did not load.' };
     }
     var foes = foeActivesOf(cards);
@@ -438,7 +438,7 @@
     }
     var sel = pairs[at];
 
-    var out = globalThis.RBLDamage.matchup({
+    var out = globalThis.RSDamage.matchup({
       gen: gen,
       gameType: room.gameType,
       field: room.field,
@@ -478,7 +478,7 @@
           'The panel stopped updating: ' + String((e && e.message) || e) +
           '. Reload the page to restart it.'));
       } catch (e2) { /* the UI itself is gone; nothing left to do */ }
-      if (typeof console !== 'undefined') console.error('[randbats-live]', e);
+      if (typeof console !== 'undefined') console.error('[randsight]', e);
     }
   }
 
@@ -524,7 +524,7 @@
     var damage = buildDamage(room, cards, gen, uiState.pair);
 
     // Tactical views: who moves first, and who to bring in.
-    var A = globalThis.RBLAdvice;
+    var A = globalThis.RSAdvice;
     var foes = foeActivesOf(cards);
     var mine = myActivesOf(room);
     var speedInfo = null, switchInfo = null;
@@ -545,7 +545,7 @@
         team: room.myTeam || [],
         foes: foes.map(function (f) { return { vm: f, raw: f.raw }; }),
         foeVM: foes[0], foeRaw: foes[0].raw,
-        damage: globalThis.RBLDamage, speed: speedInfo
+        damage: globalThis.RSDamage, speed: speedInfo
       });
     }
 
@@ -578,7 +578,7 @@
   window.addEventListener('message', function (ev) {
     if (ev.source !== window) return;
     var d = ev.data;
-    if (!d || d.__rbl !== TAG) return;
+    if (!d || d.__rs !== TAG) return;
     if (d.type === 'battles') {
       latest = { rooms: d.payload || [], at: Date.now() };
       stalled = null;
@@ -607,5 +607,5 @@
   });
 
   // Nudge the bridge in case it loaded before we did.
-  window.postMessage({ __rbl: TAG, type: 'resync' }, window.location.origin);
+  window.postMessage({ __rs: TAG, type: 'resync' }, window.location.origin);
 })();

@@ -1,5 +1,5 @@
 /*
- * Randbats Live — joint set model.
+ * Randsight — joint set model.
  *
  * engine.js reconstructs a distribution over MOVES from the published marginals.
  * That part is well calibrated, but it has to assume the item, ability and Tera
@@ -296,7 +296,7 @@
     };
   }
 
-  root.RBLJoint = {
+  root.RSJoint = {
     register: register,
     predict: predict,
     blend: blend,

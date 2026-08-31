@@ -1,5 +1,5 @@
 /*
- * Randbats Live — damage adapter.
+ * Randsight — damage adapter.
  *
  * A thin layer over the vendored @smogon/calc. We do NOT reimplement the
  * damage formula; that library is the reference implementation and getting
@@ -35,7 +35,7 @@
     psychicterrain: 'Psychic', mistyterrain: 'Misty'
   };
 
-  function lib() { return root.RBLCalcLib || null; }
+  function lib() { return root.RSCalcLib || null; }
 
   /** Merge a set's per-stat overrides onto the Random Battle default spread. */
   function spread(overrides, fallback) {
@@ -514,7 +514,7 @@
     };
   }
 
-  root.RBLDamage = {
+  root.RSDamage = {
     matchup: matchup,
     itemVariants: itemVariants,
     abilityVariants: abilityVariants,

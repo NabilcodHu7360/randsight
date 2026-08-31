@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Randbats Live — doubles harness</title>
+<title>Randsight — doubles harness</title>
 <link rel="stylesheet" href="../src/overlay.css">
 <style>body{margin:0;min-height:100vh;background:#0e1116;font:14px system-ui;color:#7a8394}#log{padding:16px;font-size:12px}</style>
 </head>
@@ -120,7 +120,7 @@ window.chrome = {
     getURL: p => '../' + p,
     sendMessage(msg,cb){
       if(msg.type==='getSets'){
-        const file = (globalThis.RBLFormats.resolve(msg.format,{gen:9}).file) || msg.format;
+        const file = (globalThis.RSFormats.resolve(msg.format,{gen:9}).file) || msg.format;
         fetch(`./fixtures/${file}.json`).then(r=>{
           if(!r.ok) throw new Error('no fixture for '+file);
           return r.json();
@@ -146,41 +146,41 @@ window.chrome = {
 
 <script>
 window.__harness = {
-  ready(){ return !!document.querySelector('#rbl-panel .rbl-mon'); },
-  emptyTitle(){ return document.querySelector('#rbl-panel .rbl-empty b')?.textContent || null; },
-  subtitle(){ return document.getElementById('rbl-sub')?.textContent; },
-  foot(){ return document.getElementById('rbl-foot')?.textContent; },
-  openAll(){ document.querySelectorAll('#rbl-panel .rbl-mon:not(.rbl-open) .rbl-mon-head').forEach(h=>h.click()); },
+  ready(){ return !!document.querySelector('#rs-panel .rs-mon'); },
+  emptyTitle(){ return document.querySelector('#rs-panel .rs-empty b')?.textContent || null; },
+  subtitle(){ return document.getElementById('rs-sub')?.textContent; },
+  foot(){ return document.getElementById('rs-foot')?.textContent; },
+  openAll(){ document.querySelectorAll('#rs-panel .rs-mon:not(.rs-open) .rs-mon-head').forEach(h=>h.click()); },
   cards(){
-    return [...document.querySelectorAll('#rbl-panel .rbl-mon')].map(c=>({
-      name: c.querySelector('.rbl-name')?.firstChild?.textContent?.trim(),
-      owner: c.querySelector('.rbl-chip-owner')?.textContent || null,
-      active: c.classList.contains('rbl-active'),
-      fainted: c.classList.contains('rbl-fainted'),
-      sections: [...c.querySelectorAll('.rbl-sec')].map(s=>({
-        title: s.querySelector('.rbl-sec-t span')?.textContent,
-        rows: [...s.querySelectorAll('.rbl-row')].map(r=>({
-          name:r.querySelector('.rbl-row-name').textContent,
-          pct:r.querySelector('.rbl-row-pct').textContent }))
+    return [...document.querySelectorAll('#rs-panel .rs-mon')].map(c=>({
+      name: c.querySelector('.rs-name')?.firstChild?.textContent?.trim(),
+      owner: c.querySelector('.rs-chip-owner')?.textContent || null,
+      active: c.classList.contains('rs-active'),
+      fainted: c.classList.contains('rs-fainted'),
+      sections: [...c.querySelectorAll('.rs-sec')].map(s=>({
+        title: s.querySelector('.rs-sec-t span')?.textContent,
+        rows: [...s.querySelectorAll('.rs-row')].map(r=>({
+          name:r.querySelector('.rs-row-name').textContent,
+          pct:r.querySelector('.rs-row-pct').textContent }))
       })),
-      facts: [...c.querySelectorAll('.rbl-fact')].map(f=>f.textContent),
-      lines: [...c.querySelectorAll('.rbl-line')].map(l=>l.textContent)
+      facts: [...c.querySelectorAll('.rs-fact')].map(f=>f.textContent),
+      lines: [...c.querySelectorAll('.rs-line')].map(l=>l.textContent)
     }));
   },
   showTab(label){
-    const b=[...document.querySelectorAll('#rbl-tabs .rbl-tab')].find(x=>x.textContent===label);
+    const b=[...document.querySelectorAll('#rs-tabs .rs-tab')].find(x=>x.textContent===label);
     if(b) b.click();
   },
   pairs(){
-    return [...document.querySelectorAll('#rbl-body .rbl-pair')]
-      .map(b=>({label:b.textContent, on:b.classList.contains('rbl-pair-on')}));
+    return [...document.querySelectorAll('#rs-body .rs-pair')]
+      .map(b=>({label:b.textContent, on:b.classList.contains('rs-pair-on')}));
   },
   clickPair(label){
-    const b=[...document.querySelectorAll('#rbl-body .rbl-pair')].find(x=>x.textContent===label);
+    const b=[...document.querySelectorAll('#rs-body .rs-pair')].find(x=>x.textContent===label);
     if(b) b.click();
   },
-  matchup(){ return document.querySelector('#rbl-body .rbl-matchup')?.textContent || null; },
-  switchHead(){ return document.querySelector('#rbl-body .rbl-matchup')?.textContent || null; }
+  matchup(){ return document.querySelector('#rs-body .rs-matchup')?.textContent || null; },
+  switchHead(){ return document.querySelector('#rs-body .rs-matchup')?.textContent || null; }
 };
 document.getElementById('log').textContent = `doubles harness: ${FORMAT} / ${MODE}`;
 </script>

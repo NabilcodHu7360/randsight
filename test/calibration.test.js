@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 require('../src/engine.js');
-const E = globalThis.RBLEngine;
+const E = globalThis.RSEngine;
 
 const DATA = process.env.RBL_DATA || '/tmp/rb';
 const STATS_FILE = path.join(DATA, 'g9stats.json');

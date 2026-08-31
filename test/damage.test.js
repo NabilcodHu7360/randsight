@@ -45,16 +45,16 @@ async function load(page, qs) {
     await page.goto(`http://127.0.0.1:${PORT}/test/harness.html`);
     await page.waitForFunction(() => window.__harness && window.__harness.ready(), { timeout: 20000 });
     const r = await page.evaluate(() => {
-      const L = globalThis.RBLCalcLib;
+      const L = globalThis.RSCalcLib;
       const gen = L.Generations.get(9);
       const spread = { hp: 85, atk: 85, def: 85, spa: 85, spd: 85, spe: 85 };
       const ivs = { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 };
       const a = new L.Pokemon(gen, 'Kingambit', { level: 74, evs: spread, ivs });
       const d = new L.Pokemon(gen, 'Gholdengo', { level: 77, evs: spread, ivs });
       const res = L.calculate(gen, a, d, new L.Move(gen, 'Sucker Punch'));
-      return { desc: res.desc(), stats: a.rawStats, ready: globalThis.RBLDamage.ready() };
+      return { desc: res.desc(), stats: a.rawStats, ready: globalThis.RSDamage.ready() };
     });
-    ok(r.ready, 'RBLDamage reports the library is available');
+    ok(r.ready, 'RSDamage reports the library is available');
     // Verified independently in node against @smogon/calc 0.11.0
     ok(/55\.1 - 65\.1%/.test(r.desc) && /guaranteed 2HKO/.test(r.desc),
       `matches the reference result: "${r.desc}"`);
@@ -71,11 +71,11 @@ async function load(page, qs) {
     await page.waitForTimeout(200);
     const after = await page.evaluate(() => window.__harness.activeTab());
     ok(after === 'Damage', 'clicking switches to Damage');
-    const monCards = await page.evaluate(() => document.querySelectorAll('#rbl-body .rbl-mon').length);
+    const monCards = await page.evaluate(() => document.querySelectorAll('#rs-body .rs-mon').length);
     ok(monCards === 0, 'the Sets list is replaced, not stacked underneath');
     await page.evaluate(() => window.__harness.showTab('Sets'));
     await page.waitForTimeout(200);
-    const back = await page.evaluate(() => document.querySelectorAll('#rbl-body .rbl-mon').length);
+    const back = await page.evaluate(() => document.querySelectorAll('#rs-body .rs-mon').length);
     ok(back === 6, 'switching back restores the Sets list');
   }
 
@@ -197,7 +197,7 @@ async function load(page, qs) {
       `swing marker explains itself: "${tuskSwings[0]}"`);
     base = await load(page, '');
     const variants = await page.evaluate(() => {
-      const D = globalThis.RBLDamage;
+      const D = globalThis.RSDamage;
       const single = D.itemVariants([{ name: 'Leftovers', prob: 1, revealed: true }]);
       const spread = D.itemVariants([
         { name: 'Choice Band', prob: 0.5 }, { name: 'Leftovers', prob: 0.45 },
@@ -218,7 +218,7 @@ async function load(page, qs) {
     // synthetic foe so the ability is the only thing that varies — the item is
     // revealed on every run below.
     const R = await page.evaluate(() => {
-      const D = globalThis.RBLDamage;
+      const D = globalThis.RSDamage;
       const mine = {
         // +2 SpA so the damage roll on a single calc is comfortably wider than
         // the 8-point threshold the swing marker uses — that is the trap.
@@ -238,7 +238,7 @@ async function load(page, qs) {
           foeRaw: { species: 'Snorlax', boosts: {}, terastallized: '' }
         });
       }
-      // exactly what dmgRow() prints into .rbl-dmg-pct
+      // exactly what dmgRow() prints into .rs-dmg-pct
       const printed = r => r.loPct.toFixed(0) + '–' + r.hiPct.toFixed(0) + '%';
       const row = (m, name) => {
         const r = m.outgoing.find(x => x.move === name);
@@ -349,10 +349,10 @@ async function load(page, qs) {
     // Iron Valiant L78 = 226 Spe; Dragapult L77 = 263. They are faster.
     ok(/226/.test(sp.numbers) && /263/.test(sp.numbers), `both speeds shown: "${sp.numbers}"`);
     ok(/They move first/.test(sp.verdict), `verdict: "${sp.verdict}"`);
-    ok(/rbl-bad/.test(sp.cls), 'losing the speed race is flagged red');
+    ok(/rs-bad/.test(sp.cls), 'losing the speed race is flagged red');
 
     const tw = await page.evaluate(() => {
-      const A = globalThis.RBLAdvice;
+      const A = globalThis.RSAdvice;
       return {
         plain: A.effectiveSpeed(226, { gen: 9 }).value,
         tail: A.effectiveSpeed(226, { gen: 9, tailwind: true }).value,
@@ -426,7 +426,7 @@ async function load(page, qs) {
       `outgoing columns are named: ${cols[1].join(' | ')}`);
 
     const legend = await page.evaluate(() =>
-      document.querySelector('#rbl-body .rbl-assumes')?.innerText || '');
+      document.querySelector('#rs-body .rs-assumes')?.innerText || '');
     ok(/Bars show damage/.test(legend), `legend explains the bars: "${legend.split('\n')[0]}"`);
 
     await page.evaluate(() => window.__harness.showTab('Switch'));
@@ -435,10 +435,10 @@ async function load(page, qs) {
     ok(scols[0] && scols[0].join(',') === 'pokemon,worst hit,survives?',
       `switch columns are named: ${scols[0] && scols[0].join(' | ')}`);
     const sv = await page.evaluate(() =>
-      document.querySelector('#rbl-body .rbl-verdict')?.textContent || '');
+      document.querySelector('#rs-body .rs-verdict')?.textContent || '');
     ok(/Safest switch:/.test(sv), `switch tab leads with a recommendation: "${sv}"`);
     const kos = await page.evaluate(() =>
-      [...document.querySelectorAll('#rbl-body .rbl-ko-yes, #rbl-body .rbl-ko-no')].map(x => x.textContent));
+      [...document.querySelectorAll('#rs-body .rs-ko-yes, #rs-body .rs-ko-no')].map(x => x.textContent));
     ok(kos.length > 0 && kos.every(k => k === 'yes' || k === 'KO'),
       `survives column reads yes/KO, not a bare number: ${kos.join(',')}`);
     await page.evaluate(() => window.__harness.showTab('Damage'));
@@ -451,10 +451,10 @@ async function load(page, qs) {
   await page.evaluate(() => window.__harness.showTab('Damage'));
   await page.waitForTimeout(250);
   await page.evaluate(() => {
-    const p = document.getElementById('rbl-panel');
+    const p = document.getElementById('rs-panel');
     p.style.height = 'auto'; p.style.maxHeight = 'none';
   });
-  await page.locator('#rbl-panel').screenshot({ path: path.join(ROOT, 'docs', 'damage-tab.png') });
+  await page.locator('#rs-panel').screenshot({ path: path.join(ROOT, 'docs', 'damage-tab.png') });
 
   await browser.close();
   server.close();

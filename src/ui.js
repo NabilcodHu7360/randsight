@@ -1,5 +1,5 @@
 /*
- * Randbats Live — overlay rendering.
+ * Randsight — overlay rendering.
  * Pure DOM construction (no innerHTML anywhere, so nothing from the battle log
  * can be interpreted as markup). Owns the panel element and its chrome;
  * content.js feeds it a view model.
@@ -60,9 +60,9 @@
   }
 
   /** A middot between items. Punctuation, not content — and at the old
-      --rbl-line colour it was 1.4:1 text, so it now uses a real text token. */
+      --rs-line colour it was 1.4:1 text, so it now uses a real text token. */
   function sep() {
-    var s = h('span', 'rbl-sep', '·');
+    var s = h('span', 'rs-sep', '·');
     s.setAttribute('aria-hidden', 'true');
     return s;
   }
@@ -73,17 +73,17 @@
 
   function build() {
     if (el) return el;
-    el = h('div'); el.id = 'rbl-panel';
+    el = h('div'); el.id = 'rs-panel';
     // A landmark with a name: the panel is findable, and everything below it is
     // announced as belonging to something rather than floating in the page.
     el.setAttribute('role', 'complementary');
-    el.setAttribute('aria-label', 'Randbats Live — opponent set predictions');
+    el.setAttribute('aria-label', 'Randsight — opponent set predictions');
 
-    var head = h('div'); head.id = 'rbl-head';
-    var title = h('span', null, 'Randbats Live'); title.id = 'rbl-title';
-    headSub = h('span', null, ''); headSub.id = 'rbl-sub';
+    var head = h('div'); head.id = 'rs-head';
+    var title = h('span', null, 'Randsight'); title.id = 'rs-title';
+    headSub = h('span', null, ''); headSub.id = 'rs-sub';
 
-    themeBtn = h('button', 'rbl-btn', '◐');
+    themeBtn = h('button', 'rs-btn', '◐');
     themeBtn.type = 'button';
     themeBtn.title = 'Toggle light / dark';
     themeBtn.setAttribute('aria-label', 'Light theme');
@@ -91,21 +91,21 @@
     themeBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       state.light = !state.light;
-      el.classList.toggle('rbl-light', state.light);
+      el.classList.toggle('rs-light', state.light);
       themeBtn.setAttribute('aria-pressed', state.light ? 'true' : 'false');
       onPersist(state);
     });
 
-    collapseBtn = h('button', 'rbl-btn', '—');
+    collapseBtn = h('button', 'rs-btn', '—');
     collapseBtn.type = 'button';
     collapseBtn.title = 'Collapse';
     collapseBtn.setAttribute('aria-label', 'Collapse panel');
     collapseBtn.setAttribute('aria-expanded', 'true');
-    collapseBtn.setAttribute('aria-controls', 'rbl-body');
+    collapseBtn.setAttribute('aria-controls', 'rs-body');
     collapseBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       state.collapsed = !state.collapsed;
-      el.classList.toggle('rbl-collapsed', state.collapsed);
+      el.classList.toggle('rs-collapsed', state.collapsed);
       collapseBtn.textContent = state.collapsed ? '+' : '—';
       syncCollapseBtn();
       onPersist(state);
@@ -116,16 +116,16 @@
     head.appendChild(themeBtn);
     head.appendChild(collapseBtn);
 
-    tabBar = h('div'); tabBar.id = 'rbl-tabs';
+    tabBar = h('div'); tabBar.id = 'rs-tabs';
     tabBar.setAttribute('role', 'tablist');
     tabBar.setAttribute('aria-label', 'Panel views');
     TABS.forEach(function (t) {
-      var b = h('button', 'rbl-tab', t[1]);
+      var b = h('button', 'rs-tab', t[1]);
       b.type = 'button';
-      b.id = 'rbl-tab-' + t[0];
+      b.id = 'rs-tab-' + t[0];
       b.dataset.tab = t[0];
       b.setAttribute('role', 'tab');
-      b.setAttribute('aria-controls', 'rbl-body');
+      b.setAttribute('aria-controls', 'rs-body');
       b.setAttribute('aria-selected', 'false');
       b.tabIndex = -1;
       b.addEventListener('click', function () { selectTab(t[0], false); });
@@ -144,13 +144,13 @@
       selectTab(TABS[next][0], true);
     });
 
-    body = h('div'); body.id = 'rbl-body';
+    body = h('div'); body.id = 'rs-body';
     body.setAttribute('role', 'tabpanel');
-    body.setAttribute('aria-labelledby', 'rbl-tab-sets');
+    body.setAttribute('aria-labelledby', 'rs-tab-sets');
     // The panel is a scroll container, so it needs to be reachable by keyboard
     // for anyone who scrolls with the arrow keys rather than a wheel.
     body.tabIndex = 0;
-    foot = h('div'); foot.id = 'rbl-foot';
+    foot = h('div'); foot.id = 'rs-foot';
 
     el.appendChild(head);
     el.appendChild(tabBar);
@@ -184,7 +184,7 @@
     state.tab = key;
     syncTabs();
     if (moveFocus) {
-      var b = tabBar.querySelector('#rbl-tab-' + key);
+      var b = tabBar.querySelector('#rs-tab-' + key);
       if (b) b.focus();
     }
     // Render BEFORE persisting: the persist handler triggers a recompute, and
@@ -198,12 +198,12 @@
     if (!tabBar) return;
     [].forEach.call(tabBar.children, function (b) {
       var on = b.dataset.tab === state.tab;
-      b.classList.toggle('rbl-tab-on', on);
+      b.classList.toggle('rs-tab-on', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
       // Roving tabindex: the tablist is one Tab stop, arrows move within it.
       b.tabIndex = on ? 0 : -1;
     });
-    if (body) body.setAttribute('aria-labelledby', 'rbl-tab-' + state.tab);
+    if (body) body.setAttribute('aria-labelledby', 'rs-tab-' + state.tab);
   }
 
   // A saved position from a bigger screen must not put the panel — and its drag
@@ -224,7 +224,7 @@
     state.pos = null; state.size = null; state.collapsed = false;
     el.style.left = ''; el.style.top = ''; el.style.right = '';
     el.style.width = ''; el.style.height = '';
-    el.classList.remove('rbl-collapsed');
+    el.classList.remove('rs-collapsed');
     onPersist(state);
   }
 
@@ -276,8 +276,8 @@
     build();
     if (!saved) return;
     state = Object.assign(state, saved);
-    el.classList.toggle('rbl-light', !!state.light);
-    el.classList.toggle('rbl-collapsed', !!state.collapsed);
+    el.classList.toggle('rs-light', !!state.light);
+    el.classList.toggle('rs-collapsed', !!state.collapsed);
     themeBtn.setAttribute('aria-pressed', state.light ? 'true' : 'false');
     syncCollapseBtn();
     if (state.pos && state.pos.left) {
@@ -297,7 +297,7 @@
     }
     if (['damage', 'switch'].indexOf(state.tab) < 0) state.tab = 'sets';
     syncTabs();
-    var cb = el.querySelectorAll('#rbl-head .rbl-btn');
+    var cb = el.querySelectorAll('#rs-head .rs-btn');
     if (cb.length) cb[cb.length - 1].textContent = state.collapsed ? '+' : '—';
   }
 
@@ -313,7 +313,7 @@
 
   function ensureTip() {
     if (tip) return tip;
-    tip = h('div'); tip.id = 'rbl-tip';
+    tip = h('div'); tip.id = 'rs-tip';
     tip.setAttribute('role', 'tooltip');
     el.appendChild(tip);
     return tip;
@@ -333,10 +333,10 @@
     if (!info || !info.short) return;
     var t = ensureTip();
     t.textContent = '';
-    t.appendChild(h('div', 'rbl-tip-t', name));
+    t.appendChild(h('div', 'rs-tip-t', name));
     var meta = moveMeta(info);
-    if (meta) t.appendChild(h('div', 'rbl-tip-m', meta));
-    t.appendChild(h('div', 'rbl-tip-d', info.short));
+    if (meta) t.appendChild(h('div', 'rs-tip-m', meta));
+    t.appendChild(h('div', 'rs-tip-d', info.short));
 
     // Anchor to the row, flipping above when there isn't room below.
     var pr = el.getBoundingClientRect();
@@ -354,7 +354,7 @@
     // actually on screen, so the reference is attached and removed with it.
     if (tipOwner && tipOwner !== row) tipOwner.removeAttribute('aria-describedby');
     tipOwner = row;
-    row.setAttribute('aria-describedby', 'rbl-tip');
+    row.setAttribute('aria-describedby', 'rs-tip');
   }
 
   var tipOwner = null;
@@ -372,7 +372,7 @@
      and Escape dismisses it (WCAG 1.4.13). */
   function attachTip(node, name, info) {
     if (!info || !info.short) return node;
-    node.classList.add('rbl-has-tip');
+    node.classList.add('rs-has-tip');
     if (!node.hasAttribute('tabindex')) node.tabIndex = 0;
     node.addEventListener('mouseenter', function () { showTip(node, name, info); });
     node.addEventListener('mouseleave', function () { hideTip(); });
@@ -399,20 +399,20 @@
 
   function probRow(name, prob, revealed, dead, info, pp) {
     var spent = pp && pp.spent;
-    var row = h('div', 'rbl-row' + (revealed ? ' rbl-rev' : '') +
-      (!revealed && prob >= 0.9995 ? ' rbl-sure' : '') +
-      (dead || spent ? ' rbl-dead' : '') + (spent ? ' rbl-spent' : ''));
+    var row = h('div', 'rs-row' + (revealed ? ' rs-rev' : '') +
+      (!revealed && prob >= 0.9995 ? ' rs-sure' : '') +
+      (dead || spent ? ' rs-dead' : '') + (spent ? ' rs-spent' : ''));
     row.setAttribute('role', 'listitem');
-    row.appendChild(bar('rbl-fill', Math.max(prob * 100, 0).toFixed(1) + '%'));
-    var nameEl = h('span', 'rbl-row-name');
-    nameEl.appendChild(h('span', 'rbl-mv', name));
+    row.appendChild(bar('rs-fill', Math.max(prob * 100, 0).toFixed(1) + '%'));
+    var nameEl = h('span', 'rs-row-name');
+    nameEl.appendChild(h('span', 'rs-mv', name));
     // PP is a hard fact, so it outranks the probability in the right-hand slot.
     if (pp && (spent || pp.ppLeft !== undefined)) {
-      nameEl.appendChild(h('span', 'rbl-lv',
+      nameEl.appendChild(h('span', 'rs-lv',
         spent ? ' \u00b7 no PP' : ' \u00b7 ' + pp.ppLeft + ' PP left'));
     }
     row.appendChild(nameEl);
-    row.appendChild(h('span', 'rbl-row-pct', revealed ? 'seen' : pct(prob)));
+    row.appendChild(h('span', 'rs-row-pct', revealed ? 'seen' : pct(prob)));
 
     // Colour says revealed / impossible / predicted; so now do a glyph, a
     // strike-through and the word in the right-hand column.
@@ -431,12 +431,12 @@
 
   /** Small column labels under a section title — every number gets a name. */
   function colHeads(labels) {
-    var row = h('div', 'rbl-cols');
+    var row = h('div', 'rs-cols');
     // Hidden from assistive tech: every row repeats these words in its own
     // label, so read aloud they would be three orphan fragments per section.
     row.setAttribute('aria-hidden', 'true');
     labels.forEach(function (l) {
-      var c = h('span', 'rbl-col-' + l.k, l.t);
+      var c = h('span', 'rs-col-' + l.k, l.t);
       row.appendChild(c);
     });
     return row;
@@ -445,16 +445,16 @@
   var VERDICT_CUE = { good: CUE.yes, bad: CUE.warn, ok: '' };
 
   function verdictLine(text, tone) {
-    var v = h('div', 'rbl-verdict rbl-v-' + (tone || 'ok'), text);
+    var v = h('div', 'rs-verdict rs-v-' + (tone || 'ok'), text);
     cue(v, VERDICT_CUE[tone || 'ok'], tone || 'ok');
     return v;
   }
 
   function section(titleText, rightText) {
-    var sec = h('div', 'rbl-sec');
+    var sec = h('div', 'rs-sec');
     sec.setAttribute('role', 'group');
     sec.setAttribute('aria-label', titleText + (rightText ? ', ' + rightText : ''));
-    var t = h('div', 'rbl-sec-t');
+    var t = h('div', 'rs-sec-t');
     t.appendChild(h('span', null, titleText));
     if (rightText) t.appendChild(h('span', null, rightText));
     sec.appendChild(t);
@@ -464,7 +464,7 @@
   /** Rows carry role="listitem", so they need a list to sit in. A plain
       wrapper: every suite selects rows as descendants, not children. */
   function rowList(name) {
-    var l = h('div', 'rbl-rows');
+    var l = h('div', 'rs-rows');
     l.setAttribute('role', 'list');
     if (name) l.setAttribute('aria-label', name);
     return l;
@@ -479,17 +479,17 @@
     var open = state.expanded[key];
     if (open === undefined) open = vm.active;
 
-    var card = h('div', 'rbl-mon' + (vm.active ? ' rbl-active' : '') +
-      (vm.fainted ? ' rbl-fainted' : '') + (open ? ' rbl-open' : ''));
+    var card = h('div', 'rs-mon' + (vm.active ? ' rs-active' : '') +
+      (vm.fainted ? ' rs-fainted' : '') + (open ? ' rs-open' : ''));
 
-    var bodyId = nextId('rbl-mon-body');
+    var bodyId = nextId('rs-mon-body');
     // A real button, not a div with a click handler: Tab reaches it, Enter and
     // Space work, and the expanded/collapsed state is announced.
-    var head = h('button', 'rbl-mon-head');
+    var head = h('button', 'rs-mon-head');
     head.type = 'button';
     head.setAttribute('aria-expanded', open ? 'true' : 'false');
     head.setAttribute('aria-controls', bodyId);
-    var icon = h('span', 'rbl-icon');
+    var icon = h('span', 'rs-icon');
     icon.setAttribute('aria-hidden', 'true');
     // The icon style comes from the page's own Dex function. It is the one
     // string the panel takes from the page and uses as CSS rather than text, so
@@ -504,22 +504,22 @@
     }
     head.appendChild(icon);
 
-    var nameWrap = h('span', 'rbl-name', vm.species);
-    if (vm.level) nameWrap.appendChild(h('span', 'rbl-lv', ' L' + vm.level));
+    var nameWrap = h('span', 'rs-name', vm.species);
+    if (vm.level) nameWrap.appendChild(h('span', 'rs-lv', ' L' + vm.level));
     head.appendChild(nameWrap);
 
     // In Multi / Free-For-All there is more than one opposing player, so each
     // card has to say whose Pokemon it is.
-    if (vm.owner) head.appendChild(h('span', 'rbl-chip rbl-chip-owner', vm.owner));
+    if (vm.owner) head.appendChild(h('span', 'rs-chip rs-chip-owner', vm.owner));
 
     // "Fainted" used to be carried by a 45% opacity wash and an "FNT" chip.
     // One chip, in words: no extra row, and it survives any colour deficiency.
     if (vm.status && String(vm.status).toLowerCase() !== 'fnt') {
-      head.appendChild(h('span', 'rbl-chip rbl-chip-status', vm.status));
+      head.appendChild(h('span', 'rs-chip rs-chip-status', vm.status));
     }
-    if (vm.tera) head.appendChild(h('span', 'rbl-chip rbl-chip-tera', 'Tera ' + vm.tera));
-    if (vm.fainted) head.appendChild(h('span', 'rbl-chip rbl-chip-out', 'fainted'));
-    var slotChip = h('span', 'rbl-chip' + (vm.slotsKnown >= vm.slotsTotal ? ' rbl-chip-known' : ''),
+    if (vm.tera) head.appendChild(h('span', 'rs-chip rs-chip-tera', 'Tera ' + vm.tera));
+    if (vm.fainted) head.appendChild(h('span', 'rs-chip rs-chip-out', 'fainted'));
+    var slotChip = h('span', 'rs-chip' + (vm.slotsKnown >= vm.slotsTotal ? ' rs-chip-known' : ''),
       vm.slotsKnown + '/' + vm.slotsTotal);
     if (vm.slotsKnown >= vm.slotsTotal) cue(slotChip, CUE.yes);
     head.appendChild(slotChip);
@@ -536,8 +536,8 @@
     ].filter(Boolean).join(', '));
 
     head.addEventListener('click', function () {
-      var nowOpen = !card.classList.contains('rbl-open');
-      card.classList.toggle('rbl-open', nowOpen);
+      var nowOpen = !card.classList.contains('rs-open');
+      card.classList.toggle('rs-open', nowOpen);
       head.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
       state.expanded[key] = nowOpen;
       onPersist(state);
@@ -546,7 +546,7 @@
 
     if (typeof vm.hpPct === 'number' && vm.hpPct < 100) {
       // The one bar with no number beside it, so it carries its own name.
-      var hpBar = h('div', 'rbl-hp' + (vm.hpPct <= 20 ? ' rbl-hp-low' : vm.hpPct <= 50 ? ' rbl-hp-mid' : ''));
+      var hpBar = h('div', 'rs-hp' + (vm.hpPct <= 20 ? ' rs-hp-low' : vm.hpPct <= 50 ? ' rs-hp-mid' : ''));
       hpBar.setAttribute('role', 'img');
       label(hpBar, Math.max(Math.round(vm.hpPct), 0) + ' percent HP left' +
         (vm.hpPct <= 20 ? ', critical' : vm.hpPct <= 50 ? ', low' : ''));
@@ -555,11 +555,11 @@
       card.appendChild(hpBar);
     }
 
-    var b = h('div', 'rbl-mon-body');
+    var b = h('div', 'rs-mon-body');
     b.id = bodyId;
 
     if (vm.unsupported) {
-      b.appendChild(h('div', 'rbl-note', vm.unsupported));
+      b.appendChild(h('div', 'rs-note', vm.unsupported));
       card.appendChild(b);
       return card;
     }
@@ -581,14 +581,14 @@
         facts.push({ text: top.name, info: top.info, revealed: top.revealed });
         return null;
       }
-      var line = h('div', 'rbl-line');
+      var line = h('div', 'rs-line');
       line.setAttribute('role', 'group');
       line.setAttribute('aria-label', heading);
       line.appendChild(h('b', null, heading));
       arr.slice(0, limit).forEach(function (x, i) {
         if (x.prob < 0.01 && !x.revealed) return;
         if (i) line.appendChild(sep());
-        var span = h('span', 'rbl-opt' + (x.revealed ? ' rbl-fact-seen' : ''),
+        var span = h('span', 'rs-opt' + (x.revealed ? ' rs-fact-seen' : ''),
           x.name + ' ' + pct(x.prob));
         if (x.revealed) cue(span, CUE.yes, 'seen');
         label(span, x.name + ', ' + (x.revealed ? 'seen' : pctWords(x.prob)));
@@ -629,7 +629,7 @@
       var lockText = vm.lock.prob >= 0.995
         ? 'Locked into ' + vm.lock.move
         : 'Locked into ' + vm.lock.move + ' if Choice (' + pct(vm.lock.prob) + ')';
-      var lockEl = h('div', 'rbl-lock', lockText);
+      var lockEl = h('div', 'rs-lock', lockText);
       lockEl.setAttribute('role', 'note');
       b.appendChild(lockEl);
     }
@@ -642,13 +642,13 @@
     ms.appendChild(msList);
 
     if (minor.length) {
-      var extraId = nextId('rbl-extra');
-      var more = h('button', 'rbl-more', '+ ' + minor.length + ' less likely');
+      var extraId = nextId('rs-extra');
+      var more = h('button', 'rs-more', '+ ' + minor.length + ' less likely');
       more.type = 'button';
       more.setAttribute('aria-expanded', 'false');
       more.setAttribute('aria-controls', extraId);
       var extra = rowList('Less likely moves');
-      extra.classList.add('rbl-extra');
+      extra.classList.add('rs-extra');
       extra.id = extraId;
       minor.forEach(function (m) {
         extra.appendChild(probRow(m.name, m.prob, false, false, m.info));
@@ -693,11 +693,11 @@
     }
 
     if (facts.length) {
-      var meta = h('div', 'rbl-meta');
+      var meta = h('div', 'rs-meta');
       meta.setAttribute('role', 'group');
       meta.setAttribute('aria-label', 'What is already settled');
       facts.forEach(function (f) {
-        var span = h('span', 'rbl-fact' + (f.revealed ? ' rbl-fact-seen' : ''), f.text);
+        var span = h('span', 'rs-fact' + (f.revealed ? ' rs-fact-seen' : ''), f.text);
         // A settled fact is green when it was actually observed; the tick is
         // what carries that when the green does not.
         if (f.revealed) { cue(span, CUE.yes, 'seen'); label(span, f.text + ', seen'); }
@@ -708,7 +708,7 @@
     }
 
     (vm.notes || []).forEach(function (n) {
-      var note = h('div', 'rbl-note', n);
+      var note = h('div', 'rs-note', n);
       note.setAttribute('role', 'note');
       b.appendChild(note);
     });
@@ -726,17 +726,17 @@
   // -------------------------------------------------------------------
 
   function dmgRow(r, showChance) {
-    var row = h('div', 'rbl-row rbl-dmg' +
-      (r.revealed ? ' rbl-rev' : '') + (r.immune ? ' rbl-immune' : ''));
+    var row = h('div', 'rs-row rs-dmg' +
+      (r.revealed ? ' rs-rev' : '') + (r.immune ? ' rs-immune' : ''));
     row.setAttribute('role', 'listitem');
-    row.appendChild(bar('rbl-fill', r.immune ? '0%' : Math.min(r.hiPct, 100).toFixed(1) + '%'));
+    row.appendChild(bar('rs-fill', r.immune ? '0%' : Math.min(r.hiPct, 100).toFixed(1) + '%'));
 
-    row.appendChild(h('span', 'rbl-row-name', r.move));
+    row.appendChild(h('span', 'rs-row-name', r.move));
 
     var pctText = r.immune ? 'immune'
       : (r.hiPct >= 100 ? r.loPct.toFixed(0) + '–' + r.hiPct.toFixed(0) + '%'
         : r.loPct.toFixed(0) + '–' + r.hiPct.toFixed(0) + '%');
-    row.appendChild(h('span', 'rbl-dmg-pct', pctText));
+    row.appendChild(h('span', 'rs-dmg-pct', pctText));
 
     var spoken = r.move + ', ';
     spoken += r.immune ? 'no effect, immune'
@@ -745,16 +745,16 @@
     if (showChance) {
       // "seen" beats "100%" here: it says WHY we're certain.
       if (r.revealed) {
-        row.appendChild(cue(h('span', 'rbl-dmg-prob rbl-dmg-seen', 'seen'), CUE.yes));
+        row.appendChild(cue(h('span', 'rs-dmg-prob rs-dmg-seen', 'seen'), CUE.yes));
         spoken += ', move already seen';
       } else {
-        row.appendChild(h('span', 'rbl-dmg-prob', Math.round(r.prob * 100) + '%'));
+        row.appendChild(h('span', 'rs-dmg-prob', Math.round(r.prob * 100) + '%'));
         spoken += ', ' + Math.round(r.prob * 100) + ' percent likely they have it';
       }
     } else {
       var koShort = /OHKO/.test(r.ko || '') ? 'OHKO'
         : (/(\d)HKO/.exec(r.ko || '') || [])[0] || '';
-      row.appendChild(h('span', 'rbl-dmg-prob rbl-dmg-ko', koShort));
+      row.appendChild(h('span', 'rs-dmg-prob rs-dmg-ko', koShort));
       if (koShort) spoken += ', ' + koShort;
     }
 
@@ -765,7 +765,7 @@
     else if (r.revealed && showChance) cue(row, CUE.yes, 'seen');
 
     if (r.swing) {
-      var mark = h('span', 'rbl-swing', '\u00b1');
+      var mark = h('span', 'rs-swing', '\u00b1');
       mark.title = 'Varies by up to ' + r.swing.pct.toFixed(0) +
         ' points with their item' + (r.swing.item ? ' (worst: ' + r.swing.item + ')' : '');
       mark.setAttribute('aria-hidden', 'true');
@@ -779,23 +779,23 @@
 
   function speedBlock(sp) {
     if (!sp) return null;
-    var box = h('div', 'rbl-speed');
+    var box = h('div', 'rs-speed');
     box.setAttribute('role', 'group');
     box.setAttribute('aria-label', 'Speed');
 
     var verdictText, cls;
-    if (sp.verdict === 'you') { verdictText = 'You move first'; cls = ' rbl-good'; }
-    else if (sp.verdict === 'them') { verdictText = 'They move first'; cls = ' rbl-bad'; }
-    else if (sp.verdict === 'tie') { verdictText = 'Speed tie'; cls = ' rbl-warn'; }
-    else { verdictText = 'You move first \u2014 unless Choice Scarf'; cls = ' rbl-warn'; }
+    if (sp.verdict === 'you') { verdictText = 'You move first'; cls = ' rs-good'; }
+    else if (sp.verdict === 'them') { verdictText = 'They move first'; cls = ' rs-bad'; }
+    else if (sp.verdict === 'tie') { verdictText = 'Speed tie'; cls = ' rs-warn'; }
+    else { verdictText = 'You move first \u2014 unless Choice Scarf'; cls = ' rs-warn'; }
 
-    var head = h('div', 'rbl-speed-v' + cls, verdictText);
-    cue(head, cls === ' rbl-good' ? CUE.yes : cls === ' rbl-bad' ? CUE.no : CUE.warn,
-      cls.trim().replace('rbl-', ''));
-    if (sp.trickRoom) head.appendChild(h('span', 'rbl-chip rbl-chip-tera', 'Trick Room'));
+    var head = h('div', 'rs-speed-v' + cls, verdictText);
+    cue(head, cls === ' rs-good' ? CUE.yes : cls === ' rs-bad' ? CUE.no : CUE.warn,
+      cls.trim().replace('rs-', ''));
+    if (sp.trickRoom) head.appendChild(h('span', 'rs-chip rs-chip-tera', 'Trick Room'));
     box.appendChild(head);
 
-    var line = h('div', 'rbl-speed-n');
+    var line = h('div', 'rs-speed-n');
     line.appendChild(h('b', null, String(sp.you.value)));
     line.appendChild(h('span', null, sp.you.parts.length ? ' (' + sp.you.parts.join(', ') + ')' : ''));
     line.appendChild(h('span', null, '  vs  '));
@@ -804,7 +804,7 @@
     box.appendChild(line);
 
     if (!sp.them.scarfKnown && sp.them.scarfProb > 0.005) {
-      box.appendChild(h('div', 'rbl-speed-s',
+      box.appendChild(h('div', 'rs-speed-s',
         'Choice Scarf would make them ' + sp.them.scarfValue +
         ' \u2014 ' + Math.round(sp.them.scarfProb * 100) + '% likely'));
     }
@@ -814,7 +814,7 @@
   function renderSwitch(view) {
     var sw = view.switches;
     if (!sw || !sw.rows || !sw.rows.length) {
-      var e = h('div', 'rbl-empty');
+      var e = h('div', 'rs-empty');
       e.appendChild(h('b', null, 'No team data yet'));
       e.appendChild(document.createTextNode(
         (view.damage && view.damage.reason) || 'Your team appears once the battle starts.'));
@@ -823,7 +823,7 @@
     }
 
     var multiFoe = sw.foes && sw.foes.length > 1;
-    body.appendChild(h('div', 'rbl-matchup', multiFoe
+    body.appendChild(h('div', 'rs-matchup', multiFoe
       ? 'Worst hit on each, from ' + sw.foes.join(' or ')
       : 'If ' + sw.foe + ' attacks, worst hit on each'));
 
@@ -854,24 +854,24 @@
 
     var list = rowList('Your team, worst hit on each');
     sw.rows.forEach(function (r) {
-      var row = h('div', 'rbl-row rbl-dmg' + (r.fainted ? ' rbl-dead' : '') +
-        (r.active ? ' rbl-rev' : ''));
+      var row = h('div', 'rs-row rs-dmg' + (r.fainted ? ' rs-dead' : '') +
+        (r.active ? ' rs-rev' : ''));
       row.setAttribute('role', 'listitem');
-      var fill = bar('rbl-fill', Math.min(r.worstPct, 100).toFixed(1) + '%');
-      if (!r.fainted && !r.survives) fill.classList.add('rbl-fill-ko');
+      var fill = bar('rs-fill', Math.min(r.worstPct, 100).toFixed(1) + '%');
+      if (!r.fainted && !r.survives) fill.classList.add('rs-fill-ko');
       row.appendChild(fill);
 
-      var name = h('span', 'rbl-row-name', r.species);
-      if (r.active) name.appendChild(h('span', 'rbl-lv', ' \u00b7 in now'));
+      var name = h('span', 'rs-row-name', r.species);
+      if (r.active) name.appendChild(h('span', 'rs-lv', ' \u00b7 in now'));
       // Without this, "68% \u2014 KO" reads as a mistake. It isn't: the slot is
       // already chipped, and the damage figure is a share of full HP.
       else if (!r.fainted && r.hpPct < 100) {
-        name.appendChild(h('span', 'rbl-lv', ' \u00b7 at ' + r.hpPct + '%'));
+        name.appendChild(h('span', 'rs-lv', ' \u00b7 at ' + r.hpPct + '%'));
       }
       row.appendChild(name);
 
       if (r.speed) {
-        var m = h('span', 'rbl-spd-mark', r.speed.faster ? '\u25b2' : '\u25bc');
+        var m = h('span', 'rs-spd-mark', r.speed.faster ? '\u25b2' : '\u25bc');
         m.title = r.speed.faster
           ? 'Outspeeds their active (' + r.speed.value + ')'
           : 'Slower than their active (' + r.speed.value + ')';
@@ -879,22 +879,22 @@
         row.appendChild(m);
       }
 
-      row.appendChild(h('span', 'rbl-dmg-pct',
+      row.appendChild(h('span', 'rs-dmg-pct',
         r.fainted ? '\u2014' : (r.worstPct > 0 ? Math.round(r.worstPct) + '%' : 'nothing')));
 
       // "KO" red vs "yes" green was the only difference on the busiest column.
       // Now the glyph, the row's inset edge and the words all say it.
       var verdict;
-      if (r.fainted) { verdict = h('span', 'rbl-dmg-prob', 'fainted'); cue(row, CUE.no, 'dead'); }
+      if (r.fainted) { verdict = h('span', 'rs-dmg-prob', 'fainted'); cue(row, CUE.no, 'dead'); }
       else if (r.unknown) {
         // The calc could not build this Pokemon — a species newer than the
         // pinned library. Say we don't know; never imply it dies.
-        verdict = h('span', 'rbl-dmg-prob', 'unknown');
+        verdict = h('span', 'rs-dmg-prob', 'unknown');
       } else if (!r.survives) {
-        verdict = cue(h('span', 'rbl-dmg-prob rbl-ko-yes', 'KO'), CUE.no);
+        verdict = cue(h('span', 'rs-dmg-prob rs-ko-yes', 'KO'), CUE.no);
         cue(row, null, 'ko');
       } else {
-        verdict = cue(h('span', 'rbl-dmg-prob rbl-ko-no', 'yes'), CUE.yes);
+        verdict = cue(h('span', 'rs-dmg-prob rs-ko-no', 'yes'), CUE.yes);
         cue(row, null, 'safe');
       }
       row.appendChild(verdict);
@@ -918,7 +918,7 @@
     sec.appendChild(list);
     body.appendChild(sec);
 
-    var legend = h('div', 'rbl-assumes');
+    var legend = h('div', 'rs-assumes');
     legend.appendChild(h('div', null,
       '\u25b2 outspeeds their active \u00b7 \u25bc slower. "Worst hit" is the biggest ' +
       'damage they can realistically do to that Pokemon.'));
@@ -929,7 +929,7 @@
   function renderDamage(view) {
     var d = view.damage;
     if (!d || !d.available) {
-      var e = h('div', 'rbl-empty');
+      var e = h('div', 'rs-empty');
       e.appendChild(h('b', null, 'No matchup yet'));
       e.appendChild(document.createTextNode((d && d.reason) || 'Waiting for both active Pokemon.'));
       body.appendChild(e);
@@ -939,7 +939,7 @@
     // Doubles has up to four pairings. Analysing one of them silently — which
     // is what this did — is worse than analysing none.
     if (d.multi && d.pairs && d.pairs.length > 1) {
-      var picker = h('div', 'rbl-pairs');
+      var picker = h('div', 'rs-pairs');
       picker.setAttribute('role', 'group');
       picker.setAttribute('aria-label', 'Which matchup to analyse');
       d.pairs.forEach(function (pr) {
@@ -948,7 +948,7 @@
         // Same order as the matchup header directly beneath it. These used to
         // disagree \u2014 the button said "Dipplin \u2192 Glaceon" over a header reading
         // "Glaceon vs Dipplin", which is the same matchup written backwards.
-        var b = h('button', 'rbl-pair' + (on ? ' rbl-pair-on' : ''),
+        var b = h('button', 'rs-pair' + (on ? ' rs-pair-on' : ''),
           pr.foe + ' vs ' + pr.mine);
         b.type = 'button';
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -963,7 +963,7 @@
       body.appendChild(picker);
     }
 
-    var head2 = h('div', 'rbl-matchup');
+    var head2 = h('div', 'rs-matchup');
     head2.appendChild(h('b', null, d.foe.species));
     head2.appendChild(h('span', null, ' vs '));
     head2.appendChild(h('b', null, d.mine.species));
@@ -973,7 +973,7 @@
     if (sb) body.appendChild(sb);
 
     if (d.warning) {
-      var warn = h('div', 'rbl-note', d.warning);
+      var warn = h('div', 'rs-note', d.warning);
       warn.setAttribute('role', 'note');
       body.appendChild(warn);
     }
@@ -987,7 +987,7 @@
       { k: 'dmg', t: 'of your HP' },
       { k: 'prob', t: 'they have it' }
     ]));
-    if (!d.incoming.length) inc.appendChild(h('div', 'rbl-quiet', 'No damaging moves found.'));
+    if (!d.incoming.length) inc.appendChild(h('div', 'rs-quiet', 'No damaging moves found.'));
     var incList = rowList('Their moves, damage to you');
     d.incoming.forEach(function (r) { incList.appendChild(dmgRow(r, true)); });
     inc.appendChild(incList);
@@ -1002,13 +1002,13 @@
       { k: 'dmg', t: 'of their HP' },
       { k: 'prob', t: '' }
     ]));
-    if (!d.outgoing.length) out.appendChild(h('div', 'rbl-quiet', 'No damaging moves found.'));
+    if (!d.outgoing.length) out.appendChild(h('div', 'rs-quiet', 'No damaging moves found.'));
     var outList = rowList('Your moves, damage to them');
     d.outgoing.forEach(function (r) { outList.appendChild(dmgRow(r, false)); });
     out.appendChild(outList);
     body.appendChild(out);
 
-    var legend = h('div', 'rbl-assumes');
+    var legend = h('div', 'rs-assumes');
     legend.appendChild(h('div', null,
       'Bars show damage. Hover or Tab to a row for the KO chance.'));
     if (d.itemNote) legend.appendChild(h('div', null, d.itemNote));
@@ -1060,7 +1060,7 @@
       // A notice outranks the tab. Whatever it says — no battle, unsupported
       // format, lost the thread, something went wrong — it is the reason there
       // is nothing else to show, so it must be what the user reads.
-      var n = h('div', 'rbl-empty');
+      var n = h('div', 'rs-empty');
       n.appendChild(h('b', null, view.emptyTitle));
       n.appendChild(document.createTextNode(view.emptyBody || ''));
       body.appendChild(n);
@@ -1068,7 +1068,7 @@
     else if (state.tab === 'damage') { renderDamage(view); }
     else if (state.tab === 'switch') { renderSwitch(view); }
     else if (!view.mons || !view.mons.length) {
-      var e = h('div', 'rbl-empty');
+      var e = h('div', 'rs-empty');
       e.appendChild(h('b', null, view.emptyTitle || 'Waiting for a battle'));
       e.appendChild(document.createTextNode(view.emptyBody || 'Start or spectate a Random Battle.'));
       body.appendChild(e);
@@ -1086,7 +1086,7 @@
 
   function setVisible(v) { build(); el.style.display = v ? 'flex' : 'none'; }
 
-  root.RBLUI = {
+  root.RSUI = {
     render: render,
     applyState: applyState,
     setVisible: setVisible,

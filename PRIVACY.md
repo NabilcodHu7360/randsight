@@ -1,10 +1,10 @@
-# Privacy Policy — Randbats Live
+# Privacy Policy — Randsight
 
 _Last updated: 2026-08-30_
 
 ## The short version
 
-**Randbats Live collects nothing.** No personal data, no browsing history, no
+**Randsight collects nothing.** No personal data, no browsing history, no
 battle logs, no analytics, no telemetry. There is no account, no login, and no
 server belonging to this extension — nothing is sent to the author of this
 extension, ever, because there is nowhere for it to be sent.
@@ -112,7 +112,7 @@ The extension is not purely passive, and the honest description is narrower than
 "read-only":
 
 - It adds **its own panel** to the page, and a stylesheet whose every rule is
-  scoped to that panel's own `rbl-` class names. It does not modify Showdown's
+  scoped to that panel's own `rs-` class names. It does not modify Showdown's
   own interface.
 - To read the battle stream, `inject.js` replaces two **browser globals** in the
   page: `window.WebSocket` (with a pass-through `Proxy` that adds a `message`
@@ -151,7 +151,7 @@ be granted access to any other site, and cannot reach across to your other tabs.
 
 ## Single purpose
 
-Randbats Live has one purpose: **to display information about Pokémon Showdown
+Randsight has one purpose: **to display information about Pokémon Showdown
 Random Battles while you play them.** Every permission above serves that purpose
 and nothing else.
 

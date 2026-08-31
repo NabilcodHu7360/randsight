@@ -1,4 +1,4 @@
-# Draft: asking Smogon about Randbats Live
+# Draft: asking Smogon about Randsight
 
 Post this before submitting to the Web Store. The answer could change what you
 ship, and finding that out after people have installed it is worse for everyone.

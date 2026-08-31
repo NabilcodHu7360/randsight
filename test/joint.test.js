@@ -18,8 +18,8 @@ const fs = require('fs');
 const path = require('path');
 require('../src/engine.js');
 require('../src/joint.js');
-const E = globalThis.RBLEngine;
-const J = globalThis.RBLJoint;
+const E = globalThis.RSEngine;
+const J = globalThis.RSJoint;
 
 const FORMAT = 'gen9randombattle';
 const TABLE = path.resolve(__dirname, '..', 'src', 'data', `joint-${FORMAT}.json`);
@@ -64,7 +64,7 @@ console.log('\n[1] Table shape');
   ok(typeof sample.fp === 'string' && sample.fp.length > 0, 'each species carries a freshness fingerprint');
   ok(table.teams >= 10000, `built from ${table.teams} teams`);
   const st = J.stats(FORMAT);
-  ok(st && st.species > 400, `RBLJoint.stats reports ${st && st.species} species`);
+  ok(st && st.species > 400, `RSJoint.stats reports ${st && st.species} species`);
 }
 
 // ---------------------------------------------------------------------------

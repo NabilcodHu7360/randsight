@@ -1,5 +1,5 @@
 /*
- * Randbats Live — page bridge (runs in the MAIN world at document_start).
+ * Randsight — page bridge (runs in the MAIN world at document_start).
  *
  * Two independent readers, because Showdown has two live clients and neither
  * is a stable API:
@@ -22,11 +22,11 @@
 (function () {
   'use strict';
 
-  var TAG = '__randbats_live__';
+  var TAG = '__randsight__';
   var POLL_MS = 500;
 
   function post(type, payload) {
-    try { window.postMessage({ __rbl: TAG, type: type, payload: payload }, window.location.origin); }
+    try { window.postMessage({ __rs: TAG, type: type, payload: payload }, window.location.origin); }
     catch (e) { /* structured-clone failure; nothing we can do */ }
   }
 
@@ -792,19 +792,19 @@
         }
       });
     }
-  } catch (e) { console.warn('[randbats-live] websocket tap unavailable', e); }
+  } catch (e) { console.warn('[randsight] websocket tap unavailable', e); }
 
   // SockJS can fall back to xhr-streaming/polling on restrictive networks.
   try {
     var openOrig = XMLHttpRequest.prototype.open;
     var sendOrig = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.open = function (method, url) {
-      try { if (/\/showdown\//.test(String(url))) this.__rblWatch = true; } catch (e) { /* ignore */ }
+      try { if (/\/showdown\//.test(String(url))) this.__rsWatch = true; } catch (e) { /* ignore */ }
       return openOrig.apply(this, arguments);
     };
     XMLHttpRequest.prototype.send = function () {
       var xhr = this;
-      if (xhr.__rblWatch) {
+      if (xhr.__rsWatch) {
         var seen = 0;
         xhr.addEventListener('progress', function () {
           try {
@@ -876,7 +876,7 @@
   }
 
   window.addEventListener('message', function (ev) {
-    if (ev.source !== window || !ev.data || ev.data.__rbl !== TAG) return;
+    if (ev.source !== window || !ev.data || ev.data.__rs !== TAG) return;
     if (ev.data.type === 'resync') { lastSerialized = ''; lastProtoSer = ''; protoDirty = true; pollClient(); }
     if (ev.data.type === 'describe') post('descs', describe(ev.data.payload || {}));
   });

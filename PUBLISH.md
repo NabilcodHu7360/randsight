@@ -8,11 +8,11 @@ one conversation — all of which need you rather than the code.
 ## 1. Push it
 
 The repo is initialised with one commit on `main`. Create an empty repo named
-`randbats-live` on GitHub (no README, no licence, no `.gitignore` — they're all
+`randsight` on GitHub (no README, no licence, no `.gitignore` — they're all
 here already), then:
 
 ```bash
-git remote add origin git@github.com:NabilcodHu7360/randbats-live.git
+git remote add origin git@github.com:NabilcodHu7360/randsight.git
 git push -u origin main
 ```
 
@@ -29,8 +29,8 @@ That publishes:
 
 | URL | What |
 |---|---|
-| `…github.io/randbats-live/` | The landing page |
-| `…github.io/randbats-live/privacy.html` | **The privacy-policy URL the Web Store requires** |
+| `…github.io/randsight/` | The landing page |
+| `…github.io/randsight/privacy.html` | **The privacy-policy URL the Web Store requires** |
 
 Both are self-contained. The privacy page loads nothing at all — no fonts, no
 CDN, no script. An analytics tag on a privacy policy answers its own question.

@@ -9,11 +9,11 @@ inside it.
 ## Name (45 char limit)
 
 ```
-Randbats Live
+Randsight
 ```
 
 `13/45`. Leaving it short on purpose — the store appends nothing, and a name
-padded out with keywords ("Randbats Live — Pokémon Showdown Random Battle Set
+padded out with keywords ("Randsight — Pokémon Showdown Random Battle Set
 Predictor") reads as SEO rather than as a product.
 
 ---
@@ -43,13 +43,13 @@ A Random Battle overlay that keeps a running estimate of the opposing team, with
 ## Detailed description
 
 ```
-Randbats Live watches your Pokémon Showdown Random Battle and keeps a running
+Randsight watches your Pokémon Showdown Random Battle and keeps a running
 estimate of what the opposing team is holding. Every time they reveal a move, an
 item or a Tera type, the whole picture tightens.
 
 It is not a lookup table. Random Battles draw a Pokémon's moves from a role, and
 the generator picks the item from the moves it chose — so what you have already
-seen genuinely changes what is still possible. Randbats Live models that
+seen genuinely changes what is still possible. Randsight models that
 relationship instead of showing you the same static percentages every game.
 
 WHAT YOU GET
@@ -116,7 +116,7 @@ Reviewers reject vague answers here. This one is narrow and matches what the
 code actually does:
 
 ```
-Randbats Live has a single purpose: to display predicted set information for the
+Randsight has a single purpose: to display predicted set information for the
 opposing team during a Pokémon Showdown Random Battle. It reads the battle state
 already present on play.pokemonshowdown.com and renders an overlay panel on that
 page. It has no other function and operates on no other site.

@@ -64,8 +64,8 @@ window.__a11y = (function () {
     var out = [], n = el;
     while (n && n.nodeType === 1) {
       var cs = getComputedStyle(n);
-      if (n.classList && n.classList.contains('rbl-row')) {
-        var f = n.querySelector(':scope > .rbl-fill');
+      if (n.classList && n.classList.contains('rs-row')) {
+        var f = n.querySelector(':scope > .rs-fill');
         if (f) {
           var fs2 = getComputedStyle(f);
           var fc = parse(fs2.backgroundColor);
@@ -75,7 +75,7 @@ window.__a11y = (function () {
       }
       var bc = parse(cs.backgroundColor);
       if (bc[3] > 0.001) out.push(bc);
-      if (n.id === 'rbl-panel') break;
+      if (n.id === 'rs-panel') break;
       n = n.parentElement;
     }
     return out;
@@ -89,7 +89,7 @@ window.__a11y = (function () {
     var o = 1, n = el;
     while (n && n.nodeType === 1) {
       o *= parseFloat(getComputedStyle(n).opacity || '1');
-      if (n.id === 'rbl-panel') break;
+      if (n.id === 'rs-panel') break;
       n = n.parentElement;
     }
     return o;
@@ -117,7 +117,7 @@ window.__a11y = (function () {
      measurement covers them. */
   function textContrast() {
     var out = [];
-    var all = document.querySelectorAll('#rbl-panel, #rbl-panel *');
+    var all = document.querySelectorAll('#rs-panel, #rs-panel *');
     for (var i = 0; i < all.length; i++) {
       var el = all[i];
       var text = ownText(el);
@@ -148,8 +148,8 @@ window.__a11y = (function () {
     var bg = bgOf(el);
     return {
       sel: desc(el),
-      inPanel: !!document.getElementById('rbl-panel') &&
-        document.getElementById('rbl-panel').contains(el),
+      inPanel: !!document.getElementById('rs-panel') &&
+        document.getElementById('rs-panel').contains(el),
       role: el.getAttribute('role') || el.tagName.toLowerCase(),
       name: el.getAttribute('aria-label') || (el.textContent || '').trim().slice(0, 48),
       outlineStyle: cs.outlineStyle,
@@ -186,10 +186,10 @@ window.__a11y = (function () {
   console.log('\n[1] Landmark, tablist and panel structure');
   {
     const s = await page.evaluate(() => {
-      const p = document.getElementById('rbl-panel');
-      const bar = document.getElementById('rbl-tabs');
-      const body = document.getElementById('rbl-body');
-      const tabs = [...bar.querySelectorAll('.rbl-tab')];
+      const p = document.getElementById('rs-panel');
+      const bar = document.getElementById('rs-tabs');
+      const body = document.getElementById('rs-body');
+      const tabs = [...bar.querySelectorAll('.rs-tab')];
       return {
         panelRole: p.getAttribute('role'),
         panelName: p.getAttribute('aria-label'),
@@ -202,15 +202,15 @@ window.__a11y = (function () {
         bodyRole: body.getAttribute('role'),
         labelledBy: body.getAttribute('aria-labelledby'),
         labelText: (document.getElementById(body.getAttribute('aria-labelledby')) || {}).textContent,
-        themePressed: document.querySelectorAll('#rbl-head .rbl-btn')[0].getAttribute('aria-pressed'),
-        collapseExpanded: document.querySelectorAll('#rbl-head .rbl-btn')[1].getAttribute('aria-expanded'),
-        headsAreButtons: [...document.querySelectorAll('.rbl-mon-head')].every(h => h.tagName === 'BUTTON'),
-        headsExpanded: [...document.querySelectorAll('.rbl-mon-head')]
+        themePressed: document.querySelectorAll('#rs-head .rs-btn')[0].getAttribute('aria-pressed'),
+        collapseExpanded: document.querySelectorAll('#rs-head .rs-btn')[1].getAttribute('aria-expanded'),
+        headsAreButtons: [...document.querySelectorAll('.rs-mon-head')].every(h => h.tagName === 'BUTTON'),
+        headsExpanded: [...document.querySelectorAll('.rs-mon-head')]
           .every(h => h.getAttribute('aria-expanded') ===
-            String(h.closest('.rbl-mon').classList.contains('rbl-open')))
+            String(h.closest('.rs-mon').classList.contains('rs-open')))
       };
     });
-    ok(s.panelRole === 'complementary' && /Randbats Live/.test(s.panelName || ''),
+    ok(s.panelRole === 'complementary' && /Randsight/.test(s.panelName || ''),
       `panel is a landmark named "${s.panelName}"`);
     ok(s.barRole === 'tablist' && s.tabs.length === 3 && s.tabs.every(t => t.role === 'tab'),
       `three role=tab buttons in a tablist (${s.tabs.map(t => t.text).join(', ')})`);
@@ -221,7 +221,7 @@ window.__a11y = (function () {
       'roving tabindex: the tablist is one Tab stop, and it is the selected tab');
     ok(s.bodyRole === 'tabpanel' && s.labelText === 'Sets',
       `the body is a tabpanel labelled by its tab ("${s.labelText}")`);
-    ok(s.tabs.every(t => t.controls === 'rbl-body'), 'every tab points at the panel it controls');
+    ok(s.tabs.every(t => t.controls === 'rs-body'), 'every tab points at the panel it controls');
     ok(s.themePressed === 'false' && s.collapseExpanded === 'true',
       'theme button is a toggle (aria-pressed) and collapse reports aria-expanded');
     ok(s.headsAreButtons, 'Pokemon card headers are real buttons, not divs with click handlers');
@@ -246,16 +246,16 @@ window.__a11y = (function () {
     const sels = stops.map(s => s.sel);
     const has = re => sels.some(s => re.test(s));
     ok(stops.length > 0, `${stops.length} Tab stops inside the panel`);
-    ok(has(/rbl-btn/) && sels.filter(s => /rbl-btn/.test(s)).length === 2,
+    ok(has(/rs-btn/) && sels.filter(s => /rs-btn/.test(s)).length === 2,
       'both header buttons (theme, collapse) are Tab stops');
-    ok(sels.filter(s => /rbl-tab\b/.test(s)).length === 1,
+    ok(sels.filter(s => /rs-tab\b/.test(s)).length === 1,
       'the tablist takes exactly one Tab stop (arrows move within it)');
-    ok(has(/#rbl-body/), 'the scrollable panel body is focusable, so it can be scrolled by keyboard');
-    ok(sels.filter(s => /rbl-mon-head/.test(s)).length >= 6,
-      `every Pokemon card header is reachable (${sels.filter(s => /rbl-mon-head/.test(s)).length})`);
-    ok(has(/rbl-row.*rbl-has-tip/) || has(/rbl-has-tip/),
+    ok(has(/#rs-body/), 'the scrollable panel body is focusable, so it can be scrolled by keyboard');
+    ok(sels.filter(s => /rs-mon-head/.test(s)).length >= 6,
+      `every Pokemon card header is reachable (${sels.filter(s => /rs-mon-head/.test(s)).length})`);
+    ok(has(/rs-row.*rs-has-tip/) || has(/rs-has-tip/),
       'rows and facts that carry a description are reachable, so their tooltip is too');
-    ok(has(/rbl-more/), 'the "+ N less likely" disclosure is a Tab stop');
+    ok(has(/rs-more/), 'the "+ N less likely" disclosure is a Tab stop');
 
     const noRing = stops.filter(s =>
       s.outlineStyle === 'none' || s.outlineWidth < 2 || s.outlineRatio < AA_UI);
@@ -272,15 +272,15 @@ window.__a11y = (function () {
   console.log('\n[3] Arrow keys move between tabs and change the panel');
   {
     const read = () => page.evaluate(() => ({
-      selected: (document.querySelector('#rbl-tabs .rbl-tab[aria-selected="true"]') || {}).textContent,
+      selected: (document.querySelector('#rs-tabs .rs-tab[aria-selected="true"]') || {}).textContent,
       focused: (document.activeElement || {}).textContent,
-      labelledBy: document.getElementById('rbl-body').getAttribute('aria-labelledby'),
+      labelledBy: document.getElementById('rs-body').getAttribute('aria-labelledby'),
       // something only the damage/switch views render
-      matchup: !!document.querySelector('#rbl-body .rbl-matchup'),
-      cards: document.querySelectorAll('#rbl-body .rbl-mon').length
+      matchup: !!document.querySelector('#rs-body .rs-matchup'),
+      cards: document.querySelectorAll('#rs-body .rs-mon').length
     }));
 
-    await page.evaluate(() => document.querySelector('#rbl-tabs .rbl-tab[aria-selected="true"]').focus());
+    await page.evaluate(() => document.querySelector('#rs-tabs .rs-tab[aria-selected="true"]').focus());
     const before = await read();
     ok(before.selected === 'Sets' && before.cards > 0, `starts on Sets with ${before.cards} cards`);
 
@@ -291,7 +291,7 @@ window.__a11y = (function () {
       `ArrowRight selects and focuses Damage (got "${right.selected}")`);
     ok(right.cards === 0 && right.matchup,
       'and the panel actually re-renders: the cards are gone, a matchup line is there');
-    ok(right.labelledBy === 'rbl-tab-damage', 'the tabpanel renames itself after its new tab');
+    ok(right.labelledBy === 'rs-tab-damage', 'the tabpanel renames itself after its new tab');
 
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(350);
@@ -323,18 +323,18 @@ window.__a11y = (function () {
   console.log('\n[4] Card headers and the disclosure work from the keyboard');
   {
     const r = await page.evaluate(async () => {
-      const head = document.querySelector('.rbl-mon-head');
+      const head = document.querySelector('.rs-mon-head');
       head.focus();
-      const openBefore = head.closest('.rbl-mon').classList.contains('rbl-open');
+      const openBefore = head.closest('.rs-mon').classList.contains('rs-open');
       return { focused: document.activeElement === head, openBefore };
     });
     ok(r.focused, 'a card header takes focus');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(120);
     const afterEnter = await page.evaluate(() => {
-      const head = document.querySelector('.rbl-mon-head');
+      const head = document.querySelector('.rs-mon-head');
       return {
-        open: head.closest('.rbl-mon').classList.contains('rbl-open'),
+        open: head.closest('.rs-mon').classList.contains('rs-open'),
         expanded: head.getAttribute('aria-expanded')
       };
     });
@@ -344,12 +344,12 @@ window.__a11y = (function () {
     await page.keyboard.press('Space');
     await page.waitForTimeout(120);
     ok(await page.evaluate(() =>
-      document.querySelector('.rbl-mon-head').closest('.rbl-mon').classList.contains('rbl-open')) === r.openBefore,
+      document.querySelector('.rs-mon-head').closest('.rs-mon').classList.contains('rs-open')) === r.openBefore,
       'Space toggles it back');
 
     const more = await page.evaluate(() => {
       // only a button inside an open card can actually take focus
-      const b = [...document.querySelectorAll('.rbl-mon.rbl-open .rbl-more')][0];
+      const b = [...document.querySelectorAll('.rs-mon.rs-open .rs-more')][0];
       if (!b) return null;
       b.focus();
       if (document.activeElement !== b) return null;
@@ -364,7 +364,7 @@ window.__a11y = (function () {
       await page.keyboard.press('Enter');
       await page.waitForTimeout(120);
       const after = await page.evaluate(() => {
-        const b = document.querySelector('.rbl-more');
+        const b = document.querySelector('.rs-more');
         return { expanded: b.getAttribute('aria-expanded'),
           hidden: document.getElementById(b.getAttribute('aria-controls')).hidden };
       });
@@ -383,7 +383,7 @@ window.__a11y = (function () {
     await page.evaluate(() => window.__harness.openAll());
     await page.waitForTimeout(200);
     const before = await page.evaluate(() => {
-      const heads = [...document.querySelectorAll('.rbl-mon-head')];
+      const heads = [...document.querySelectorAll('.rs-mon-head')];
       const h = heads[2] || heads[0];
       h.focus();
       return { sel: window.__a11y.desc(document.activeElement),
@@ -392,12 +392,12 @@ window.__a11y = (function () {
     // Force the panel to re-render by advancing the mock battle a turn.
     await page.evaluate(() => { window.app.curRoom.battle.turn += 1; });
     await page.waitForFunction(
-      t => (document.getElementById('rbl-sub').textContent || '').indexOf('turn ' + t) >= 0,
+      t => (document.getElementById('rs-sub').textContent || '').indexOf('turn ' + t) >= 0,
       await page.evaluate(() => window.app.curRoom.battle.turn), { timeout: 5000 });
     const after = await page.evaluate(() => ({
       sel: window.__a11y.desc(document.activeElement),
       name: document.activeElement.getAttribute && document.activeElement.getAttribute('aria-label'),
-      inPanel: document.getElementById('rbl-panel').contains(document.activeElement)
+      inPanel: document.getElementById('rs-panel').contains(document.activeElement)
     }));
     ok(after.inPanel && after.name === before.name,
       `focus stays on the same control across a re-render ("${before.name}" -> "${after.name}")`);
@@ -409,22 +409,22 @@ window.__a11y = (function () {
     await page.evaluate(() => window.__harness.openAll());
     await page.waitForTimeout(150);
     const focused = await page.evaluate(() => {
-      const row = [...document.querySelectorAll('#rbl-panel .rbl-row.rbl-has-tip')][0];
+      const row = [...document.querySelectorAll('#rs-panel .rs-row.rs-has-tip')][0];
       if (!row) return null;
       row.focus();
-      const t = document.getElementById('rbl-tip');
+      const t = document.getElementById('rs-tip');
       return {
-        name: row.querySelector('.rbl-row-name').textContent,
+        name: row.querySelector('.rs-row-name').textContent,
         shown: !!t && t.style.display === 'block',
         describedby: row.getAttribute('aria-describedby'),
         tipRole: t && t.getAttribute('role'),
-        title: t && t.querySelector('.rbl-tip-t') && t.querySelector('.rbl-tip-t').textContent,
-        desc: t && t.querySelector('.rbl-tip-d') && t.querySelector('.rbl-tip-d').textContent
+        title: t && t.querySelector('.rs-tip-t') && t.querySelector('.rs-tip-t').textContent,
+        desc: t && t.querySelector('.rs-tip-d') && t.querySelector('.rs-tip-d').textContent
       };
     });
     ok(focused && focused.shown,
       `focusing a described row opens its tooltip ("${focused && focused.name}")`);
-    ok(focused && focused.describedby === 'rbl-tip' && focused.tipRole === 'tooltip',
+    ok(focused && focused.describedby === 'rs-tip' && focused.tipRole === 'tooltip',
       'the row points at it with aria-describedby while it is on screen');
     ok(focused && focused.desc && focused.desc.length > 5,
       `so a keyboard user can read the description: "${focused && focused.desc}"`);
@@ -432,8 +432,8 @@ window.__a11y = (function () {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(60);
     const dismissed = await page.evaluate(() => ({
-      shown: document.getElementById('rbl-tip').style.display === 'block',
-      describedby: document.querySelector('#rbl-panel .rbl-row.rbl-has-tip').getAttribute('aria-describedby')
+      shown: document.getElementById('rs-tip').style.display === 'block',
+      describedby: document.querySelector('#rs-panel .rs-row.rs-has-tip').getAttribute('aria-describedby')
     }));
     ok(!dismissed.shown && !dismissed.describedby,
       'Escape dismisses it and drops the description reference (WCAG 1.4.13)');
@@ -454,7 +454,7 @@ window.__a11y = (function () {
         return kid[0] || '';
       }
       const out = {};
-      document.querySelectorAll('#rbl-panel [data-state]').forEach(el => {
+      document.querySelectorAll('#rs-panel [data-state]').forEach(el => {
         const k = el.getAttribute('data-state');
         (out[k] = out[k] || []).push({
           sel: window.__a11y.desc(el), cue: cueIn(el),
@@ -495,8 +495,8 @@ window.__a11y = (function () {
     await page.evaluate(() => window.__harness.showTab('Switch'));
     await page.waitForTimeout(350);
     const koWords = await page.evaluate(() =>
-      [...document.querySelectorAll('#rbl-body .rbl-ko-yes, #rbl-body .rbl-ko-no')]
-        .map(x => x.className.replace(/rbl-dmg-prob /, '') + '=' + x.textContent));
+      [...document.querySelectorAll('#rs-body .rs-ko-yes, #rs-body .rs-ko-no')]
+        .map(x => x.className.replace(/rs-dmg-prob /, '') + '=' + x.textContent));
     ok(koWords.length > 0 && koWords.every(w => /=(yes|KO)$/.test(w)),
       `the survives column is words as well as colour: ${koWords.join(', ')}`);
 
@@ -505,10 +505,10 @@ window.__a11y = (function () {
     await page.waitForTimeout(300);
     await page.evaluate(() => window.__harness.openAll());
     const bars = await page.evaluate(() => ({
-      fills: [...document.querySelectorAll('#rbl-panel .rbl-fill')]
+      fills: [...document.querySelectorAll('#rs-panel .rs-fill')]
         .filter(f => f.getAttribute('aria-hidden') !== 'true').length,
-      totalFills: document.querySelectorAll('#rbl-panel .rbl-fill').length,
-      hp: [...document.querySelectorAll('#rbl-panel .rbl-hp')]
+      totalFills: document.querySelectorAll('#rs-panel .rs-fill').length,
+      hp: [...document.querySelectorAll('#rs-panel .rs-hp')]
         .map(b => ({ role: b.getAttribute('role'), name: b.getAttribute('aria-label') }))
     }));
     ok(bars.totalFills > 0 && bars.fills === 0,
@@ -524,10 +524,10 @@ window.__a11y = (function () {
     await page.waitForTimeout(200);
     const rows = await page.evaluate(() => {
       const inList = el => !!el.closest('[role="list"]');
-      return [...document.querySelectorAll('#rbl-panel .rbl-row')].map(r => ({
+      return [...document.querySelectorAll('#rs-panel .rs-row')].map(r => ({
         role: r.getAttribute('role'), inList: inList(r),
         label: r.getAttribute('aria-label'),
-        pct: (r.querySelector('.rbl-row-pct') || {}).textContent
+        pct: (r.querySelector('.rs-row-pct') || {}).textContent
       }));
     });
     ok(rows.length > 0 && rows.every(r => r.role === 'listitem' && r.inList),
@@ -544,9 +544,9 @@ window.__a11y = (function () {
     ok(!!sure, `a settled move reads "certain", not "100 %": "${sure && sure.label}"`);
 
     const heads = await page.evaluate(() =>
-      [...document.querySelectorAll('.rbl-mon-head')].map(h => ({
+      [...document.querySelectorAll('.rs-mon-head')].map(h => ({
         label: h.getAttribute('aria-label'),
-        species: h.querySelector('.rbl-name').firstChild.textContent.trim()
+        species: h.querySelector('.rs-name').firstChild.textContent.trim()
       })));
     ok(heads.every(h => h.label && /move slots known$/.test(h.label)),
       `card headers spell out the slot chip: "${heads[0].label}"`);
@@ -556,7 +556,7 @@ window.__a11y = (function () {
     await page.evaluate(() => window.__harness.showTab('Switch'));
     await page.waitForTimeout(350);
     const swRows = await page.evaluate(() =>
-      [...document.querySelectorAll('#rbl-body .rbl-row')].map(r => r.getAttribute('aria-label')));
+      [...document.querySelectorAll('#rs-body .rs-row')].map(r => r.getAttribute('aria-label')));
     ok(swRows.every(l => l && /(survives|knocked out|fainted)/.test(l)),
       `switch rows say the outcome in words: "${swRows[0]}"`);
     await page.evaluate(() => window.__harness.showTab('Sets'));
@@ -571,15 +571,15 @@ window.__a11y = (function () {
     const worstPerTheme = {};
     for (const light of [false, true]) {
       await page.evaluate(on => {
-        const p = document.getElementById('rbl-panel');
-        if (p.classList.contains('rbl-light') !== on) {
+        const p = document.getElementById('rs-panel');
+        if (p.classList.contains('rs-light') !== on) {
           // the ◐ button, exactly as a user would flip it
-          document.querySelectorAll('#rbl-head .rbl-btn')[0].click();
+          document.querySelectorAll('#rs-head .rs-btn')[0].click();
         }
       }, light);
       await page.waitForTimeout(150);
       const themeOn = await page.evaluate(() =>
-        document.getElementById('rbl-panel').classList.contains('rbl-light'));
+        document.getElementById('rs-panel').classList.contains('rs-light'));
       ok(themeOn === light, `${light ? 'light' : 'dark'} theme applied via the ◐ button`);
 
       let bad = [], worst = { ratio: 99 }, counted = 0, faded = [];
@@ -590,7 +590,7 @@ window.__a11y = (function () {
           await page.evaluate(() => window.__harness.openAll());
           await page.waitForTimeout(200);
           // open the long tail too, so its rows get measured
-          await page.evaluate(() => document.querySelectorAll('.rbl-more').forEach(b => b.click()));
+          await page.evaluate(() => document.querySelectorAll('.rs-more').forEach(b => b.click()));
           await page.waitForTimeout(150);
         }
         const rows = await page.evaluate(() => window.__a11y.textContrast());
@@ -622,9 +622,9 @@ window.__a11y = (function () {
     // any text next to them have their own 3:1 floor.
     for (const light of [false, true]) {
       await page.evaluate(on => {
-        const p = document.getElementById('rbl-panel');
-        if (p.classList.contains('rbl-light') !== on) {
-          document.querySelectorAll('#rbl-head .rbl-btn')[0].click();
+        const p = document.getElementById('rs-panel');
+        if (p.classList.contains('rs-light') !== on) {
+          document.querySelectorAll('#rs-head .rs-btn')[0].click();
         }
       }, light);
       await page.evaluate(() => window.__harness.showTab('Sets'));
@@ -634,22 +634,22 @@ window.__a11y = (function () {
 
       const edges = await page.evaluate(() => {
         const A = window.__a11y, out = [];
-        const p = document.getElementById('rbl-panel');
+        const p = document.getElementById('rs-panel');
         const cs = getComputedStyle(p);
-        const edge = A.parse(cs.getPropertyValue('--rbl-edge').trim());
+        const edge = A.parse(cs.getPropertyValue('--rs-edge').trim());
         // the token that all real control boundaries are drawn from
-        ['--rbl-bg', '--rbl-bg-2', '--rbl-bg-3'].forEach(v => {
+        ['--rs-bg', '--rs-bg-2', '--rs-bg-3'].forEach(v => {
           const bg = A.parse(cs.getPropertyValue(v).trim());
-          out.push({ sel: '--rbl-edge on ' + v, ratio: A.ratio(edge, bg) });
+          out.push({ sel: '--rs-edge on ' + v, ratio: A.ratio(edge, bg) });
         });
         // the underline that says which tab you are on
-        const on = document.querySelector('#rbl-tabs .rbl-tab.rbl-tab-on');
+        const on = document.querySelector('#rs-tabs .rs-tab.rs-tab-on');
         out.push({
           sel: 'selected tab underline',
           ratio: A.ratio(A.over(A.parse(getComputedStyle(on).borderBottomColor), A.bgOf(on)), A.bgOf(on))
         });
         // the "fainted" badge, which is a dashed outline and nothing else
-        const out2 = document.querySelector('.rbl-chip-out');
+        const out2 = document.querySelector('.rs-chip-out');
         if (out2) {
           const b = A.bgOf(out2.parentElement);
           out.push({
@@ -658,7 +658,7 @@ window.__a11y = (function () {
           });
         }
         // the HP bar, whose fill has to be distinguishable from its track
-        const hp = document.querySelector('.rbl-hp');
+        const hp = document.querySelector('.rs-hp');
         if (hp) {
           const track = A.parse(getComputedStyle(hp).backgroundColor);
           const fill = A.parse(getComputedStyle(hp.firstElementChild).backgroundColor);
@@ -683,7 +683,7 @@ window.__a11y = (function () {
     await rm.evaluate(() => window.__harness.openAll());
     await rm.waitForTimeout(250);
     const durations = await rm.evaluate(() =>
-      [...document.querySelectorAll('#rbl-panel, #rbl-panel *')]
+      [...document.querySelectorAll('#rs-panel, #rs-panel *')]
         .map(e => getComputedStyle(e).transitionDuration)
         .filter(d => d && !/^0s(,\s*0s)*$/.test(d)));
     ok(durations.length === 0,
@@ -695,13 +695,13 @@ window.__a11y = (function () {
     await hc.waitForFunction(() => window.__harness && window.__harness.ready(), { timeout: 15000 });
     await hc.waitForTimeout(250);
     const hcEdges = await hc.evaluate(() => {
-      const A = window.__a11y, p = document.getElementById('rbl-panel');
-      const card = document.querySelector('.rbl-mon');
+      const A = window.__a11y, p = document.getElementById('rs-panel');
+      const card = document.querySelector('.rs-mon');
       const cs = getComputedStyle(card);
       const bg = A.bgOf(card.parentElement);
       return {
-        line: getComputedStyle(p).getPropertyValue('--rbl-line').trim(),
-        edge: getComputedStyle(p).getPropertyValue('--rbl-edge').trim(),
+        line: getComputedStyle(p).getPropertyValue('--rs-line').trim(),
+        edge: getComputedStyle(p).getPropertyValue('--rs-edge').trim(),
         cardBorder: A.ratio(A.over(A.parse(cs.borderTopColor), bg), bg)
       };
     });
