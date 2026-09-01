@@ -43,56 +43,61 @@ A Random Battle overlay that keeps a running estimate of the opposing team, with
 ## Detailed description
 
 ```
-Randsight watches your Pokémon Showdown Random Battle and keeps a running
-estimate of what the opposing team is holding. Every time they reveal a move, an
-item or a Tera type, the whole picture tightens.
+You are nine turns into a Random Battle, looking at a Gholdengo, and the game comes down to one question: does it have Focus Blast?
 
-It is not a lookup table. Random Battles draw a Pokémon's moves from a role, and
-the generator picks the item from the moves it chose — so what you have already
-seen genuinely changes what is still possible. Randsight models that
-relationship instead of showing you the same static percentages every game.
+You can't know. But you can know the odds — and they are not the odds they were on turn one.
 
-WHAT YOU GET
+Randsight watches your battle and keeps a running estimate of what the opposing team is holding. Every move they use, every item that gives itself away, every Tera type spent narrows it. By the time the decision matters, you are usually not guessing.
 
-Sets — one card per opposing Pokémon. Per-move probabilities for the slots you
-haven't seen, the role posterior, item, ability, Tera type, and their speed at
-their actual level. Anything that has stopped being a question shrinks to one
-line, so what's on screen is what's still undecided. Hover anything for what it
-actually does.
+WHY IT ISN'T A LOOKUP TABLE
 
-Damage — the current matchup, both directions, opening with a plain-English
-verdict: "You survive — worst is Headlong Rush at 64%, about 2 hits." Incoming
-moves are ranked by threat, meaning damage discounted by how likely they
-actually have it — a plain calculator can't rank a move it doesn't know about.
-Damage is computed across their whole item and ability distribution, not one
-guess. Immunities are shown, not hidden.
+Random Battles don't roll moves independently. The generator picks a role first, draws moves to fit that role, and then chooses an item based on the moves it landed on. So what you have already seen genuinely changes what is still possible. A Great Tusk that has shown Rapid Spin is a different Pokémon from one that has shown Bulk Up — different remaining moves, and different item odds too.
 
-Switch — your six ranked by how much HP is left standing after the worst hit
-they can realistically land. It leads with the answer, and if nothing on your
-bench survives, it says so rather than recommending a Pokémon that dies.
+Tools that show the same static percentages every game can't tell those two apart. Randsight models the relationship, so the numbers answer your battle instead of describing the average one.
 
-It also reads three things off the battle that set data cannot tell you:
-Terastallization is once per side, so after they use it the panel stops showing
-Tera types for everyone else. A Choice item locks them into the move they just
-used. A move used to its PP limit cannot happen again.
+THREE TABS, THREE QUESTIONS
+
+SETS — what can they still be carrying?
+
+One card per opposing Pokémon: the odds on each move slot you haven't seen, the role, the item, the ability, the Tera type, and their speed at their actual level. Anything that has stopped being a question collapses to a single line, so what's on screen is only what's still undecided. Hover anything to find out what it does.
+
+DAMAGE — do I survive, and do I kill?
+
+The current matchup in both directions, opening with the answer in plain words: "You survive — worst is Headlong Rush at 64%, about 2 hits." Their moves are ranked by threat, not raw damage: how hard it hits, discounted by how likely they are to actually have it. A normal calculator can't rank a move it doesn't know about yet. And the numbers are computed across their whole item and ability distribution rather than one hopeful guess. Immunities are shown, not quietly skipped.
+
+SWITCH — who can come in?
+
+Your six, ranked by how much HP is left standing after the worst hit they can realistically land, with a mark for who outspeeds. It leads with the answer. If nothing on your bench survives, it says so instead of recommending a Pokémon that dies.
+
+IT READS THE BATTLE, NOT JUST THE DATA
+
+Three things no set file can tell you, taken straight from what happened:
+
+Terastallization is once per side. After they use it, Randsight stops offering Tera types for the rest of their team.
+
+A Choice item locks them into the move they just used — so the panel stops pretending the others are live this turn.
+
+A move used to its last PP cannot happen again.
+
+WHAT IT WON'T DO
+
+It won't tell you it knows. Uncertainty stays visible: a 34% is drawn as a 34%, not rounded up into a recommendation. Where a number depends on something unrevealed, it says which assumption it made.
+
+It doesn't play for you. There is no auto-anything — it reads the page, it never sends a move, and it never touches the socket.
+
+Doubles damage doesn't yet model spread-move targeting or redirection, and the panel tells you so rather than quietly being wrong.
 
 FORMATS
 
-All fourteen supported Random Battle formats ship their own prediction data —
-gen 1 through gen 9 singles, gen 9 doubles, Champions doubles, Baby, BDSP, and
-Let's Go. Blitz and unrated lobbies work too. Multi and Free-For-All resolve to
-the closest format and are labelled as approximate.
+All fourteen Random Battle formats with published prediction data: gen 1 through gen 9 singles, gen 9 doubles, Champions doubles, Baby, BDSP, and Let's Go. Blitz and unrated lobbies work too. Multi and Free-For-All fall back to the closest format and are labelled as approximate rather than presented as exact.
 
 PRIVACY
 
-It collects nothing. No account, no analytics, no telemetry, no server. Two
-kinds of request leave your browser: the public set-data files from
-pkmn/randbats, and Pokémon sprites from Showdown's own sprite server. The only
-permission it asks for is storage, used to remember where you left the panel.
-The full policy is linked below and ships inside the extension.
+It collects nothing. No account, no analytics, no telemetry, no server — there is nowhere for your data to go, because there is no "there".
 
-Open source, MIT licensed. Not affiliated with Smogon, Pokémon Showdown, or
-Nintendo/Game Freak.
+Two kinds of request leave your browser: the public set-data files from pkmn/randbats, and Pokémon sprites from Showdown's own sprite server. The only permission it asks for is storage, used to remember where you left the panel. The full policy is linked below and also ships inside the extension.
+
+Open source under the MIT licence, and the damage calculator is Smogon's own, included unmodified so you can read it. Not affiliated with Smogon, Pokémon Showdown, or Nintendo/Game Freak.
 ```
 
 ---
@@ -135,19 +140,28 @@ re-downloaded on every battle. All of it stays in chrome.storage.local on the
 user's own machine. Nothing is transmitted.
 ```
 
-### Host access — `play.pokemonshowdown.com` and `replay.pokemonshowdown.com`
+### Host access
 
-The extension declares no `host_permissions`, but content-script match patterns
-still cause Chrome to show and request site access, and reviewers ask about it:
+Two separate things a reviewer will ask about, and they must not be conflated —
+the manifest declares `host_permissions` for the two data hosts, and separately
+declares content-script matches for the two Showdown hosts.
 
 ```
-The extension's entire function is to display an overlay on a Pokémon Showdown
-battle page, so it must run on the page where the battle happens. The content
-scripts are declared statically in the manifest for exactly two hosts and cannot
-be extended to any other site at runtime. No host_permissions are requested, no
-tabs permission is requested, and the extension cannot see any other tab. It
-reads the battle state the page already holds and writes only its own overlay
-element into the page.
+The extension does two distinct things with hosts, and asks for the narrowest
+access that allows each.
+
+Content scripts are declared statically in the manifest for exactly two hosts,
+play.pokemonshowdown.com and replay.pokemonshowdown.com, because the extension's
+entire function is to draw an overlay on the page where the battle happens. They
+cannot be extended to any other site at runtime. No tabs permission is requested
+and the extension cannot see any other tab. On those two pages it reads the
+battle state the page already holds and writes only its own overlay element.
+
+host_permissions are declared for two hosts and nothing else: data.pkmn.cc and
+raw.githubusercontent.com/pkmn/randbats. These are the two locations of the
+public random-battle set-data files the prediction is built from. They are
+fetched as JSON, parsed with JSON.parse, and never executed. No user data is
+sent with those requests; they are plain GETs for static public files.
 ```
 
 ### Remote code
@@ -178,14 +192,13 @@ Certifications to tick:
 
 ## Screenshots
 
-`docs/store/` — three at 1280×800, from a real ladder game, with both account
-names replaced. `1-sets.png`, `2-damage.png`, `3-switch.png`.
+`docs/store/` — `1-sets.png`, `2-damage.png`, `3-switch.png`, three at 1280×800.
+Generated by `npm run shots`, so they track the shipping build rather than
+drifting away from it the way the old hand-taken ones did.
 
-Suggested captions, if you use them:
-
-1. *Every opposing Pokémon, with what's still uncertain about it*
-2. *Both directions of the matchup, and who moves first*
-3. *Who to bring in, ranked by what survives*
+Each already carries its own headline in the image, so the store's caption field
+can be left empty. The uncaptioned crops in `docs/site/` are for the landing
+page, which writes its own captions — don't upload those here.
 
 ---
 
@@ -193,17 +206,20 @@ Suggested captions, if you use them:
 
 | Field | Value |
 |---|---|
-| Homepage | the public repo, once it exists |
-| Privacy policy | wherever `docs/privacy.html` ends up hosted — **required**, the listing cannot be submitted without it |
-| Support | the repo's issues page |
+| Homepage | `https://nabilcodhu7360.github.io/randsight/` |
+| Privacy policy | `https://nabilcodhu7360.github.io/randsight/privacy.html` |
+| Support | `https://github.com/NabilcodHu7360/randsight/issues` |
+
+Both github.io URLs need GitHub Pages switched on (Settings → Pages → `main`,
+folder `/docs`). The privacy field is required and the form will not submit
+without a URL that actually resolves.
 
 ---
 
 ## Before you hit submit
 
-- [ ] Retake `2-damage.png` — the current one predates v1.7.0 and shows a
-      warning that no longer fires, and the old pairing-button wording
-- [ ] Privacy policy actually reachable at the URL you entered
-- [ ] The zip is the one from `npm run package`, not a hand-made one
+- [ ] Privacy policy actually reachable at the URL you entered — open it
+- [ ] The zip is the one from `npm run package` (~0.74 MB, 46 files), not a
+      hand-made one and not `randsight-repo.zip`
 - [ ] `LICENSE` and `THIRD-PARTY-LICENSES.txt` are inside the zip (they are,
       and `load.test.js` asserts it)
