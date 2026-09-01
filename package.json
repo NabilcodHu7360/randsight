@@ -1,6 +1,6 @@
 {
   "name": "randsight",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Chrome extension: live Bayesian set prediction for Pokemon Showdown Random Battles.",
   "private": true,
   "scripts": {

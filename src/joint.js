@@ -45,9 +45,18 @@
 
   function register(format, table) {
     if (!table || !table.species) return false;
+    var keys = Object.keys(table.species);
     var index = {};
-    Object.keys(table.species).forEach(function (k) { index[id(k)] = k; });
-    tables[format] = { table: table, index: index };
+    keys.forEach(function (k) { index[id(k)] = k; });
+    var F = globalThis.RSFormats;
+    tables[format] = {
+      table: table,
+      index: index,
+      // The same base-name-only-has-a-forme problem the stats lookup has. The
+      // joint table is keyed off the same species names, so without this a
+      // Greninja in doubles silently falls back to the marginal model.
+      formes: (F && F.formeIndex) ? F.formeIndex(keys) : {}
+    };
     return true;
   }
 
@@ -56,10 +65,13 @@
     if (!t) return null;
     var s = t.table.species;
     if (s[species]) return { key: species, entry: s[species] };
-    var byId = t.index[id(species)];
+    var sid = id(species);
+    var byId = t.index[sid];
     if (byId) return { key: byId, entry: s[byId] };
     var base = t.index[id(String(species).split('-')[0])];
     if (base) return { key: base, entry: s[base] };
+    var latent = t.formes[sid];
+    if (latent && s[latent]) return { key: latent, entry: s[latent] };
     return null;
   }
 

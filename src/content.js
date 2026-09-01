@@ -135,7 +135,8 @@
       } else {
         delete lastFetchError[file];
         setsCache[file] = {
-          sets: res.sets, index: indexSets(res.sets), fetchedAt: res.fetchedAt,
+          sets: res.sets, index: indexSets(res.sets),
+          formes: F.formeIndex(Object.keys(res.sets)), fetchedAt: res.fetchedAt,
           stale: res.stale, error: res.error, species: res.species
         };
       }
@@ -145,7 +146,7 @@
     return null;
   }
 
-  /** exact forme -> id match -> base forme */
+  /** exact forme -> id match -> base forme -> latent forme */
   function lookupSpecies(bundle, species) {
     if (!bundle || !bundle.sets) return null;
     if (bundle.sets[species]) return { key: species, entry: bundle.sets[species] };
@@ -154,6 +155,10 @@
     var base = String(species).split('-')[0];
     var bid = toId(base);
     if (bundle.index[bid]) return { key: bundle.index[bid], entry: bundle.sets[bundle.index[bid]] };
+    // The other direction: the field shows a base name the file only has as a
+    // forme (Greninja -> Greninja-Bond). See RSFormats.formeIndex.
+    var latent = bundle.formes && bundle.formes[id];
+    if (latent && bundle.sets[latent]) return { key: latent, entry: bundle.sets[latent] };
     return null;
   }
 

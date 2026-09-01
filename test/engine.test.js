@@ -219,5 +219,74 @@ console.log('\n[11] Speed formula');
   ok(E.speedStat(142, 100, null, { spe: 0 }) === 310, 'spe IV override honoured -> ' + E.speedStat(142, 100, null, { spe: 0 }));
 }
 
+// ---------------------------------------------------------------------------
+console.log('\n[12] A species the file only has as a forme still resolves');
+{
+  // Reported from a live gen9 doubles game: Greninja showed no data at all.
+  // gen9randomdoublesbattle publishes `Greninja-Bond` and no plain `Greninja`,
+  // because Battle Bond is the only Greninja that format generates — but the
+  // protocol says "Greninja", which is what is standing on the field until it
+  // transforms. Both lookups walked forme -> base and neither walked back.
+  require('../src/formats.js');
+  const F = globalThis.RSFormats;
+
+  const idOf = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+  // The reported case, against the real published file.
+  const dbl = 'gen9randomdoublesbattle.stats.json';
+  if (!fs.existsSync(path.join(DATA_DIR, dbl))) {
+    console.log('  skip  ' + dbl);
+  } else {
+    const keys = Object.keys(load(dbl));
+    const formes = F.formeIndex(keys);
+    ok(!keys.includes('Greninja'), 'doubles really has no plain "Greninja" key');
+    ok(keys.includes('Greninja-Bond'), 'doubles really does have "Greninja-Bond"');
+    ok(formes.greninja === 'Greninja-Bond',
+      `"Greninja" resolves to ${formes.greninja || 'NOTHING'}`);
+  }
+
+  // A forme that is a genuinely different Pokemon must NOT be borrowed for the
+  // base name. Serving Hisuian Qwilfish's set for a plain Qwilfish would be a
+  // worse failure than serving none, because it looks like an answer.
+  const baby = 'gen9babyrandombattle.stats.json';
+  if (fs.existsSync(path.join(DATA_DIR, baby))) {
+    const formes = F.formeIndex(Object.keys(load(baby)));
+    ok(!formes.qwilfish, 'Qwilfish-Hisui is not offered up as plain "Qwilfish"');
+    ok(!formes.basculin, 'Basculin-White-Striped is not offered up as plain "Basculin"');
+  }
+
+  // Ambiguity is left unresolved rather than guessed at. Let's Go is where the
+  // real ambiguity lives: a Charizard on the field could be heading for either
+  // Mega, and nothing in the data says which.
+  const lg = 'gen7letsgorandombattle.stats.json';
+  if (fs.existsSync(path.join(DATA_DIR, lg))) {
+    const keys = Object.keys(load(lg));
+    const formes = F.formeIndex(keys);
+    const zard = keys.filter(k => idOf(k).startsWith('charizard'));
+    ok(zard.length === 2 && !formes.charizard,
+      `Charizard has ${zard.length} Mega formes and stays unresolved`);
+    ok(!formes.mewtwo, 'and so does Mewtwo');
+    ok(formes.pikachu === 'Pikachu-Starter',
+      `partner Pikachu resolves to ${formes.pikachu || 'NOTHING'}`);
+  }
+
+  // Urshifu reads like ambiguity but is not: -Rapid-Strike appears under its
+  // own name, so the only forme that shows as plain "Urshifu" is the Gmax one.
+  const g8 = 'gen8randombattle.stats.json';
+  if (fs.existsSync(path.join(DATA_DIR, g8))) {
+    const formes = F.formeIndex(Object.keys(load(g8)));
+    ok(formes.urshifu === 'Urshifu-Gmax',
+      `Urshifu resolves past -Rapid-Strike to ${formes.urshifu || 'NOTHING'}`);
+    ok(formes.gengar === 'Gengar-Gmax', `Gengar resolves to ${formes.gengar || 'NOTHING'}`);
+  }
+
+  // A base that exists in its own right is never overridden by a forme.
+  {
+    const formes = F.formeIndex(['Greninja', 'Greninja-Bond', 'Keldeo-Resolute']);
+    ok(!formes.greninja, 'a real "Greninja" key wins over "Greninja-Bond"');
+    ok(formes.keldeo === 'Keldeo-Resolute', 'and Keldeo still resolves');
+  }
+}
+
 console.log('\n' + (failures ? `${failures} FAILURE(S)` : 'all checks passed'));
 process.exit(failures ? 1 : 0);
