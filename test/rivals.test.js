@@ -58,6 +58,21 @@ const statsById = {};
 Object.keys(stats).forEach(k => { statsById[id(k)] = stats[k]; });
 const statsFor = sp => statsById[id(sp)] || statsById[id(String(sp).split('-')[0])] || null;
 
+// The npm release of pokemon-showdown can lag behind the live server data that
+// data.pkmn.cc publishes hourly. Benchmark only generated sets that the live
+// data still considers possible; otherwise this test grades the model against
+// two contradictory versions of Showdown (and reports honest live predictions
+// as errors). The refresh workflow still rebuilds tables from the current
+// generator, while this guard keeps ordinary CI deterministic between npm
+// releases.
+function matchesPublishedSet(species, moves, item) {
+  const e = statsFor(species);
+  if (!e) return false;
+  const roles = e.roles ? Object.values(e.roles) : [e];
+  return roles.some(r => moves.every(m => (r.moves || {})[m]) &&
+    (!item || !(r.items && Object.keys(r.items).length) || r.items[item]));
+}
+
 // ---------------------------------------------------------------------------
 // The rival model: filter roles by revealed moves and Tera, then report each
 // surviving role's PUBLISHED percentages, unchanged.
@@ -119,15 +134,22 @@ Object.values(table.species).forEach(e => {
 const toName = x => (x == null ? null : (nameById[id(x)] || null));
 
 const mons = [];
+let versionMismatches = 0;
 for (let i = 0; i < TEAMS; i++) {
   for (const s of Teams.generate(FORMAT)) {
     const moves = (s.moves || []).map(toName);
     const item = toName(s.item);
     if (moves.length !== 4 || moves.some(m => !m) || !statsFor(s.species || s.name)) continue;
+    if (!matchesPublishedSet(s.species || s.name, moves, item)) {
+      versionMismatches++;
+      continue;
+    }
     mons.push({ species: s.species || s.name, moves, item, tera: s.teraType || null });
   }
 }
-console.log(`  ${mons.length} Pokemon\n`);
+console.log(`  ${mons.length} Pokemon (${versionMismatches} skipped from an older simulator data revision)\n`);
+ok(mons.length > 0 && versionMismatches / (mons.length + versionMismatches) < 0.05,
+  `at least 95% of simulator sets still match the live data (${mons.length}/${mons.length + versionMismatches})`);
 
 // Every move the published stats list for a species, across all its roles.
 const pubCache = {};
