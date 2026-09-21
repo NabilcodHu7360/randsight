@@ -6,7 +6,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const { fetchFirstValidJson } = require('./fetch-json');
 
 const FORMATS = [
   'gen9randombattle', 'gen8randombattle', 'gen1randombattle',
@@ -27,25 +27,8 @@ const SOURCES = [
 const FIXTURES = path.resolve(__dirname, '..', 'test', 'fixtures');
 const DATA = process.env.RBL_DATA || '/tmp/rb';
 
-function get(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, res => {
-      if (res.statusCode !== 200) { res.resume(); return reject(new Error(`${url} -> ${res.statusCode}`)); }
-      let buf = '';
-      res.setEncoding('utf8');
-      res.on('data', d => { buf += d; });
-      res.on('end', () => resolve(buf));
-    }).on('error', reject);
-  });
-}
-
 async function fetchOne(f) {
-  let lastErr;
-  for (const src of SOURCES) {
-    try { return await get(src(f)); }
-    catch (e) { lastErr = e; }
-  }
-  throw lastErr;
+  return fetchFirstValidJson(SOURCES.map(src => src(f)));
 }
 
 (async () => {
@@ -53,7 +36,6 @@ async function fetchOne(f) {
   fs.mkdirSync(DATA, { recursive: true });
   for (const f of FORMATS) {
     const body = await fetchOne(f);
-    JSON.parse(body);                        // fail loudly on a bad download
     // engine.test.js reads these names
     const engineName = f === 'gen9randombattle' ? 'g9stats.json' : `${f}.stats.json`;
     fs.writeFileSync(path.join(DATA, engineName), body);

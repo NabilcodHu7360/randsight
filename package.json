@@ -4,7 +4,8 @@
   "description": "Chrome extension: live Bayesian set prediction for Pokemon Showdown Random Battles.",
   "private": true,
   "scripts": {
-    "test": "npm run test:engine && npm run test:ui && npm run test:doubles && npm run test:damage && npm run test:a11y && npm run test:protocol && npm run test:regress && npm run test:load && npm run test:joint && npm run test:rivals",
+    "test": "npm run test:fetch-json && npm run test:engine && npm run test:ui && npm run test:doubles && npm run test:damage && npm run test:a11y && npm run test:protocol && npm run test:regress && npm run test:load && npm run test:joint && npm run test:rivals",
+    "test:fetch-json": "node test/fetch-json.test.js",
     "test:engine": "node test/engine.test.js",
     "test:ui": "node test/ui.test.js",
     "test:a11y": "node test/a11y.test.js",

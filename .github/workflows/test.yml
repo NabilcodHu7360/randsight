@@ -36,6 +36,8 @@ jobs:
       # One step per suite: a red X in the UI then names the suite that failed
       # instead of just "npm test", which is the difference between reading a
       # log and guessing at one.
+      - name: downloads — reject non-JSON responses and use the mirror
+        run: npm run test:fetch-json
       - name: engine — the model against the real published data
         run: npm run test:engine
       - name: ui — bridge to overlay, in real Chromium
