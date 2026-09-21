@@ -275,6 +275,33 @@ const server = http.createServer((req, res) => {
       `fainted Pokemon sorts last (${cards[cards.length - 1].name})`);
   }
 
+  console.log('\n[11] Respectful feedback prompt');
+  {
+    // Four distinct completed battles are required. The test marks each as a
+    // win so the prompt can appear at the preferred moment rather than using
+    // the two-match neutral fallback.
+    for (let i = 1; i <= 4; i++) {
+      await page.evaluate(i => {
+        const id = 'battle-gen9randombattle-feedback-' + i;
+        battle.id = id;
+        battle.ended = true;
+        battle.winner = 'You';
+        roomObj.id = id;
+        window.app.rooms = { [id]: roomObj };
+        window.app.curRoom = roomObj;
+      }, i);
+      await page.waitForTimeout(650);
+    }
+    const prompt = page.locator('#rs-panel .rs-engagement');
+    ok(await prompt.count() === 1, 'one prompt appears after four completed battles');
+    ok(/Nice win/.test(await prompt.textContent()), 'the preferred post-win message is used');
+    const labels = await prompt.locator('button').allTextContents();
+    ok(['Rate', 'Recommend', 'Request a feature', 'Not now', "Don't ask again"]
+      .every(label => labels.includes(label)), 'all feedback choices are available');
+    await prompt.getByRole('button', { name: 'Not now' }).click();
+    ok(await prompt.count() === 0, 'Not now dismisses the card without blocking the panel');
+  }
+
   const panel = page.locator('#rs-panel');
   await page.evaluate(() => {
     const p = document.getElementById('rs-panel');

@@ -241,6 +241,38 @@
 }
 .rs-empty b { color: var(--rs-fg-dim); display: block; margin-bottom: 4px; }
 
+/* A deliberately low-pressure feedback request, shown only after several
+   completed battles. It stays inside the panel and never blocks the game. */
+.rs-engagement {
+  margin: 7px 0 1px;
+  padding: 9px;
+  background: var(--rs-bg-2);
+  border: 1px solid var(--rs-edge);
+  border-radius: 7px;
+}
+.rs-engagement b { display: block; color: var(--rs-fg); margin-bottom: 2px; }
+.rs-engagement p { margin: 0 0 7px; color: var(--rs-fg-dim); font-size: 10.5px; }
+.rs-engagement-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+.rs-engagement-action,
+.rs-engagement-quiet button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.rs-engagement-action {
+  padding: 4px 7px;
+  color: var(--rs-fg);
+  background: var(--rs-bg-3);
+  border: 1px solid var(--rs-edge);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.rs-engagement-action:hover { border-color: var(--rs-accent); color: var(--rs-accent); }
+.rs-engagement-quiet { display: flex; gap: 10px; margin-top: 7px; }
+.rs-engagement-quiet button { color: var(--rs-fg-faint); font-size: 10px; }
+.rs-engagement-quiet button:hover { color: var(--rs-fg); text-decoration: underline; }
+
 /* ---------------- pokemon card ---------------- */
 
 .rs-mon {

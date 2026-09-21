@@ -354,6 +354,7 @@
           .filter(Boolean);
         var near = readSide(battle.nearSide || battle.mySide || battle.p1, mine, ally);
         var far = readSide(battle.farSide || battle.p2, mine, ally);
+        var winner = typeof battle.winner === 'string' ? battle.winner : '';
         payloads.push({
           source: 'client',
           roomid: roomid || battle.id || '',
@@ -362,6 +363,8 @@
           gameType: battle.gameType || 'singles',
           turn: typeof battle.turn === 'number' ? battle.turn : -1,
           ended: !!battle.ended,
+          winner: winner,
+          won: !!winner && !!mine && toId(winner) === toId(mine.name),
           isReplay: !!battle.isReplay,
           focused: !!focus && String(roomid) === focus,
           sides: allSides,
@@ -672,7 +675,9 @@
         r = room(roomid); r.turn = parseInt(p[2], 10) || r.turn; protoDirty = true;
         return;
       case 'win': case 'tie':
-        r = room(roomid); r.ended = true; protoDirty = true;
+        r = room(roomid); r.ended = true;
+        r.winner = cmd === 'win' ? (p[2] || '') : '';
+        protoDirty = true;
         return;
       case 'deinit': case 'noinit':
         delete proto.rooms[roomid]; protoDirty = true;
@@ -763,7 +768,9 @@
       payloads.push({
         source: 'protocol',
         roomid: rid, tier: '', gen: 0, gameType: 'singles',
-        turn: r.turn, ended: r.ended, isReplay: false,
+        turn: r.turn, ended: r.ended, winner: r.winner || '',
+        won: !!r.winner && !!proto.me && toId(r.winner) === proto.me,
+        isReplay: false,
         focused: rid === focusedRoomId(),
         near: collect(nearSide), far: collect(foeSide)
       });

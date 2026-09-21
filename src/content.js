@@ -24,6 +24,11 @@
   var modelCache = {};             // fileId + '|' + speciesKey -> built model
   var pending = {};
   var lastRenderKey = '';
+  var engagementReady = false;
+  var engagementPrompt = null;
+  var engagement = {
+    completed: 0, nextAt: 4, countedRooms: [], suppressed: false
+  };
 
   // Joint set tables (src/data/joint-*.json). Loaded lazily per format, since
   // most sessions only ever need one. Until a table arrives — or for a format
@@ -60,8 +65,11 @@
   // settings
   // -------------------------------------------------------------------
 
-  chrome.storage.local.get(['rsSettings', 'rsUi'], function (got) {
+  chrome.storage.local.get(['rsSettings', 'rsUi', 'rsEngagement'], function (got) {
     if (got.rsSettings) settings = Object.assign(settings, got.rsSettings);
+    if (got.rsEngagement) engagement = Object.assign(engagement, got.rsEngagement);
+    if (!Array.isArray(engagement.countedRooms)) engagement.countedRooms = [];
+    engagementReady = true;
     UI.applyState(got.rsUi || null);
     UI.setVisible(settings.enabled !== false);
     UI.onPersist(function (st) {
@@ -72,6 +80,7 @@
       lastRenderKey = null;
       rerender();
     });
+    processCompletedBattles(latest.rooms || []);
     rerender();
   });
 
@@ -104,6 +113,69 @@
   // -------------------------------------------------------------------
 
   function toId(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
+
+  function saveEngagement() {
+    chrome.storage.local.set({ rsEngagement: engagement });
+  }
+
+  // Ask rarely, only after battles this user played. At the fourth completed
+  // match we prefer to wait for a win; after two more matches a neutral prompt
+  // is allowed so the request does not disappear forever after a losing run.
+  function processCompletedBattles(rooms) {
+    if (!engagementReady || engagement.suppressed) return;
+    var changed = false;
+    (rooms || []).forEach(function (room) {
+      if (!room || !room.ended || room.isReplay || room.source !== 'client') return;
+      if (!room.myTeam || !room.myTeam.length || !room.roomid) return;
+      if (engagement.countedRooms.indexOf(room.roomid) !== -1) return;
+      engagement.countedRooms.push(room.roomid);
+      if (engagement.countedRooms.length > 24) engagement.countedRooms.shift();
+      engagement.completed++;
+      changed = true;
+
+      var due = engagement.completed >= engagement.nextAt;
+      var overdue = engagement.completed >= engagement.nextAt + 2;
+      if (!engagementPrompt && due && (room.won || overdue)) {
+        engagementPrompt = { won: !!room.won };
+        engagement.nextAt = engagement.completed + 4;
+      }
+    });
+    if (changed) saveEngagement();
+  }
+
+  function engagementAction(action) {
+    engagementPrompt = null;
+    if (action === 'never' || action === 'rate' || action === 'recommend') {
+      engagement.suppressed = true;
+    }
+    saveEngagement();
+    lastRenderKey = '';
+    rerender();
+
+    if (action === 'rate') {
+      window.open('https://chromewebstore.google.com/detail/' + chrome.runtime.id + '/reviews', '_blank', 'noopener');
+    } else if (action === 'feature') {
+      window.open('https://github.com/NabilcodHu7360/randsight/issues/new?title=Feature%20request%3A%20', '_blank', 'noopener');
+    } else if (action === 'recommend') {
+      var share = {
+        title: 'Randsight',
+        text: 'Try Randsight for live Random Battle set predictions on Pokemon Showdown.',
+        url: 'https://nabilcodhu7360.github.io/randsight/'
+      };
+      if (navigator.share) navigator.share(share).catch(function () {});
+      else window.open(share.url, '_blank', 'noopener');
+    }
+  }
+
+  function renderView(view) {
+    if (engagementPrompt && !engagement.suppressed) {
+      view.engagement = {
+        won: engagementPrompt.won,
+        onAction: engagementAction
+      };
+    }
+    UI.render(view);
+  }
 
   function indexSets(sets) {
     var idx = {};
@@ -479,7 +551,7 @@
       // Never leave a half-drawn panel presenting itself as current.
       lastRenderKey = '';
       try {
-        UI.render(notice('', 'Something went wrong',
+        renderView(notice('', 'Something went wrong',
           'The panel stopped updating: ' + String((e && e.message) || e) +
           '. Reload the page to restart it.'));
       } catch (e2) { /* the UI itself is gone; nothing left to do */ }
@@ -492,18 +564,18 @@
 
     var room = chooseRoom(latest.rooms || []);
     if (!room) {
-      return UI.render(notice('', 'No battle open',
+      return renderView(notice('', 'No battle open',
         'Join or spectate a Random Battle and the opposing team shows up here.'));
     }
 
     var info = F.resolve(room.roomid || room.tier, { gen: room.gen });
     if (!info.ok) {
-      return UI.render(notice(room.tier || room.roomid, 'Unsupported format',
+      return renderView(notice(room.tier || room.roomid, 'Unsupported format',
         (info.id || room.roomid) + ' has no published randbats set data.'));
     }
 
     if (stalled) {
-      return UI.render(notice(info.id, 'Lost track of the battle',
+      return renderView(notice(info.id, 'Lost track of the battle',
         'The page\u2019s battle data could not be read, so these numbers would be out of date. ' +
         'Reload the page to reconnect.'));
     }
@@ -512,10 +584,10 @@
     if (!bundle) {
       var failed = lastFetchError[info.file];
       if (failed) {
-        return UI.render(notice(info.id, 'Could not load set data',
+        return renderView(notice(info.id, 'Could not load set data',
           String(failed.error || 'unknown error') + ' \u2014 retrying.'));
       }
-      return UI.render(notice(info.id, 'Loading set data\u2026',
+      return renderView(notice(info.id, 'Loading set data\u2026',
         'Fetching ' + info.file + ' from pkmn/randbats.'));
     }
 
@@ -559,11 +631,11 @@
 
     // Skip the DOM work when nothing observable changed — the bridge polls
     // twice a second and most ticks are identical.
-    var key = JSON.stringify([room.roomid, settings.side, cards, sub, footRight, damage, speedInfo, switchInfo]);
+    var key = JSON.stringify([room.roomid, settings.side, cards, sub, footRight, damage, speedInfo, switchInfo, engagementPrompt]);
     if (key === lastRenderKey) return;
     lastRenderKey = key;
 
-    UI.render({
+    renderView({
       subtitle: sub,
       subtitleFull: sub + ' \u00b7 ' + info.id,
       mons: cards,
@@ -586,6 +658,7 @@
     if (!d || d.__rs !== TAG) return;
     if (d.type === 'battles') {
       latest = { rooms: d.payload || [], at: Date.now() };
+      processCompletedBattles(latest.rooms);
       stalled = null;
       rerender();
       return;

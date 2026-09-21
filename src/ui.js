@@ -1045,6 +1045,33 @@
     if (typeof n.focus === 'function') n.focus({ preventScroll: true });
   }
 
+  function renderEngagement(prompt) {
+    if (!prompt || typeof prompt.onAction !== 'function') return;
+    var card = h('section', 'rs-engagement');
+    card.setAttribute('aria-label', 'Help improve Randsight');
+    card.appendChild(h('b', null, prompt.won ? 'Nice win! Enjoying Randsight?' : 'Help improve Randsight'));
+    card.appendChild(h('p', null, 'A quick rating, recommendation, or feature idea helps shape what comes next.'));
+
+    var primary = h('div', 'rs-engagement-actions');
+    [['rate', 'Rate'], ['recommend', 'Recommend'], ['feature', 'Request a feature']].forEach(function (item) {
+      var button = h('button', 'rs-engagement-action', item[1]);
+      button.type = 'button';
+      button.addEventListener('click', function () { prompt.onAction(item[0]); });
+      primary.appendChild(button);
+    });
+    card.appendChild(primary);
+
+    var quiet = h('div', 'rs-engagement-quiet');
+    [['later', 'Not now'], ['never', "Don't ask again"]].forEach(function (item) {
+      var button = h('button', null, item[1]);
+      button.type = 'button';
+      button.addEventListener('click', function () { prompt.onAction(item[0]); });
+      quiet.appendChild(button);
+    });
+    card.appendChild(quiet);
+    body.appendChild(card);
+  }
+
   function render(view) {
     build();
     lastView = view;
@@ -1075,6 +1102,8 @@
     } else {
       view.mons.forEach(function (vm) { body.appendChild(monCard(vm)); });
     }
+
+    renderEngagement(view.engagement);
 
     foot.textContent = '';
     foot.appendChild(h('span', null, view.footLeft || ''));
