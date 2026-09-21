@@ -17,7 +17,7 @@ TEMPLATE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy — Randsight</title>
-<meta name="description" content="Randsight collects nothing. What it stores, what leaves your browser, and why.">
+<meta name="description" content="How Randsight processes battle information locally, what it stores, and what leaves your browser.">
 <style>
   :root {{
     --ground:#f6f7f9; --surface:#fff; --hair:#dde2ea; --ink:#14181e;

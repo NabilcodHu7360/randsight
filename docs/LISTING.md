@@ -93,9 +93,9 @@ All fourteen Random Battle formats with published prediction data: gen 1 through
 
 PRIVACY
 
-It collects nothing. No account, no analytics, no telemetry, no server — there is nowhere for your data to go, because there is no "there".
+No user data is sent to the developer. There is no account, analytics, telemetry, advertising, or developer-operated server. Battle information is processed locally to provide the features shown in the panel.
 
-Two kinds of request leave your browser: the public set-data files from pkmn/randbats, and Pokémon sprites from Showdown's own sprite server. The only permission it asks for is storage, used to remember where you left the panel. The full policy is linked below and also ships inside the extension.
+Two kinds of request leave your browser: the public set-data files from pkmn/randbats, and Pokémon sprites from Showdown's own sprite server. The storage permission remembers panel settings, caches public set data, and keeps the local counter and preferences for an occasional, dismissible feedback request. The full policy is linked below and also ships inside the extension.
 
 Open source under the MIT licence, and the damage calculator is Smogon's own, included unmodified so you can read it. Not affiliated with Smogon, Pokémon Showdown, or Nintendo/Game Freak.
 ```
@@ -121,10 +121,11 @@ Reviewers reject vague answers here. This one is narrow and matches what the
 code actually does:
 
 ```
-Randsight has a single purpose: to display predicted set information for the
-opposing team during a Pokémon Showdown Random Battle. It reads the battle state
-already present on play.pokemonshowdown.com and renders an overlay panel on that
-page. It has no other function and operates on no other site.
+Randsight has one purpose: to provide live decision-support information for
+Pokémon Showdown Random Battles. On play.pokemonshowdown.com, it reads the
+current battle state and displays an overlay containing predicted opposing
+sets, damage estimates, Speed comparisons, and switch guidance. It does not
+automate gameplay, send battle commands, or operate on unrelated websites.
 ```
 
 ---
@@ -134,10 +135,14 @@ page. It has no other function and operates on no other site.
 ### `storage`
 
 ```
-Used only to remember the overlay's position, size, theme, which cards the user
-expanded, and a cached copy of the public set-data files so they are not
-re-downloaded on every battle. All of it stays in chrome.storage.local on the
-user's own machine. Nothing is transmitted.
+Used to remember the overlay's position, size, theme, selected tab, expanded
+cards, enabled state, and selected team side. It also caches public set-data
+files and stores the completed-battle counter and preferences used by the
+occasional feedback prompt, including whether the user selected “Don't ask
+again.” A limited list of recently counted battle room identifiers prevents a
+completed battle from being counted twice. All of it stays in
+chrome.storage.local on the user's own machine and is never sent to the
+developer.
 ```
 
 ### Host access
@@ -179,8 +184,11 @@ package.
 
 ## Data usage disclosures
 
-Every checkbox: **not collected**. There is no analytics, no telemetry, no
-account, and no server belonging to this extension.
+No selected data category is transmitted to or accessible by the developer.
+The extension processes battle-page content and player display names locally,
+and stores only the local settings and counters described in the privacy policy.
+Complete the dashboard's data-category questions consistently with Google's
+current guidance for locally processed data.
 
 Certifications to tick:
 

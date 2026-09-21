@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Randsight",
-  "version": "1.7.2",
-  "description": "Joint-model set prediction and damage calculator for Pokemon Showdown Random Battles.",
+  "version": "1.7.3",
+  "description": "Live set prediction, damage estimates, and switch advice for Pokemon Showdown Random Battles.",
   "minimum_chrome_version": "111",
   "permissions": [
     "storage"

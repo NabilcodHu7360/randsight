@@ -153,7 +153,9 @@
     rerender();
 
     if (action === 'rate') {
-      window.open('https://chromewebstore.google.com/detail/' + chrome.runtime.id + '/reviews', '_blank', 'noopener');
+      // Chrome's documented direct-review URL uses the item id without a
+      // listing slug and redirects to the current Web Store UI.
+      window.open('https://chrome.google.com/webstore/detail/' + chrome.runtime.id + '/reviews', '_blank', 'noopener');
     } else if (action === 'feature') {
       window.open('https://github.com/NabilcodHu7360/randsight/issues/new?title=Feature%20request%3A%20', '_blank', 'noopener');
     } else if (action === 'recommend') {

@@ -1,13 +1,13 @@
 # Privacy Policy — Randsight
 
-_Last updated: 2026-08-30_
+_Last updated: 2026-09-21_
 
 ## The short version
 
-**Randsight collects nothing.** No personal data, no browsing history, no
-battle logs, no analytics, no telemetry. There is no account, no login, and no
-server belonging to this extension — nothing is sent to the author of this
-extension, ever, because there is nowhere for it to be sent.
+**Randsight sends no user data to its developer.** There is no account, login,
+analytics, telemetry, advertising, or developer-operated server. Battle
+information is processed locally on the user's device only to provide the
+extension's visible predictions, damage estimates, and switch guidance.
 
 Two kinds of request do leave your browser: the public Pokémon set-data files,
 and the Pokémon sprite images the panel draws. Both are described below, and
@@ -25,9 +25,12 @@ the extension.
 | Which cards you expanded, keyed by side and Pokémon identifier (e.g. `p2\|p2a: Gholdengo`) | So a card you opened stays open. This list is never pruned, so it accumulates the names of Pokémon you have opened a card for |
 | Whether the overlay is shown, which side it tracks, when you last forced a refresh | Your settings from the toolbar popup |
 | A cached copy of the public randbats set data, under one key per format (`sets:gen9randombattle`, …) | So it doesn't refetch on every battle. The **set of keys** is therefore a durable record of which formats you have played |
+| Completed-battle count, the next feedback threshold, and whether feedback requests were disabled | To show the optional feedback card occasionally and respect “Don't ask again” |
+| Up to 24 recently counted battle room identifiers | To avoid counting the same completed battle twice after a page refresh; these identifiers remain local and are replaced as later battles finish |
 
-That is the complete list. None of it leaves your machine, and none of it is
-readable by any website — `chrome.storage.local` is private to the extension.
+That is the complete list of persistent extension data. None of it is sent to
+the developer or readable by websites — `chrome.storage.local` is private to
+the extension.
 
 If you would rather not keep the format list, the toolbar popup's **Refresh now**
 button deletes every `sets:` key outright, and uninstalling the extension deletes

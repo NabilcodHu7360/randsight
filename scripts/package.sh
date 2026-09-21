@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the Chrome Web Store package.
+# Build the complete Chrome Web Store upload package.
 #
 # An ALLOWLIST, deliberately. An exclude-list quietly ships whatever you forgot
 # to exclude — node_modules, test fixtures, a stray dev script — and a reviewer

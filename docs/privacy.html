@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy — Randsight</title>
-<meta name="description" content="Randsight collects nothing. What it stores, what leaves your browser, and why.">
+<meta name="description" content="How Randsight processes battle information locally, what it stores, and what leaves your browser.">
 <style>
   :root {
     --ground:#f6f7f9; --surface:#fff; --hair:#dde2ea; --ink:#14181e;
@@ -45,12 +45,12 @@
 <body>
 <main>
 <h1>Privacy Policy — Randsight</h1>
-<p><em>Last updated: 2026-08-30</em></p>
+<p><em>Last updated: 2026-09-21</em></p>
 <h2>The short version</h2>
-<p><strong>Randsight collects nothing.</strong> No personal data, no browsing history, no
-battle logs, no analytics, no telemetry. There is no account, no login, and no
-server belonging to this extension — nothing is sent to the author of this
-extension, ever, because there is nowhere for it to be sent.</p>
+<p><strong>Randsight sends no user data to its developer.</strong> There is no account, login,
+analytics, telemetry, advertising, or developer-operated server. Battle
+information is processed locally on the user's device only to provide the
+extension's visible predictions, damage estimates, and switch guidance.</p>
 <p>Two kinds of request do leave your browser: the public Pokémon set-data files,
 and the Pokémon sprite images the panel draws. Both are described below, and
 neither goes anywhere you were not already talking to.</p>
@@ -82,10 +82,19 @@ the extension.</p>
 <td>A cached copy of the public randbats set data, under one key per format (<code>sets:gen9randombattle</code>, …)</td>
 <td>So it doesn't refetch on every battle. The <strong>set of keys</strong> is therefore a durable record of which formats you have played</td>
 </tr>
+<tr>
+<td>Completed-battle count, the next feedback threshold, and whether feedback requests were disabled</td>
+<td>To show the optional feedback card occasionally and respect “Don't ask again”</td>
+</tr>
+<tr>
+<td>Up to 24 recently counted battle room identifiers</td>
+<td>To avoid counting the same completed battle twice after a page refresh; these identifiers remain local and are replaced as later battles finish</td>
+</tr>
 </tbody>
 </table>
-<p>That is the complete list. None of it leaves your machine, and none of it is
-readable by any website — <code>chrome.storage.local</code> is private to the extension.</p>
+<p>That is the complete list of persistent extension data. None of it is sent to
+the developer or readable by websites — <code>chrome.storage.local</code> is private to
+the extension.</p>
 <p>If you would rather not keep the format list, the toolbar popup's <strong>Refresh now</strong>
 button deletes every <code>sets:</code> key outright, and uninstalling the extension deletes
 all of it.</p>

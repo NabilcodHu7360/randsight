@@ -565,7 +565,7 @@ It does not substitute for a real screen-reader run, which has not been done.
 
 ## Privacy
 
-The extension collects nothing: there is no server, no account, no analytics, and no battle
+The extension sends no user data to its developer: there is no server, no account, no analytics, and no battle
 log, chat message, username or result is ever transmitted anywhere. Two kinds of request do
 leave your browser, and both are documented rather than glossed over:
 
